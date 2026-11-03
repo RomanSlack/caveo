@@ -1,6 +1,7 @@
 """Caveo web app: inbox, cases, audit log, human approval."""
 import json, pathlib, re, subprocess, threading, time, uuid
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from collections import defaultdict, deque
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -19,6 +20,20 @@ store.init()
 
 def _inbox():
     return [json.loads(p.read_text()) for p in sorted((DATA / "inbox").glob("*.json"))]
+
+
+_hits = defaultdict(deque)
+
+
+def _rate_limit(req: Request, limit=12, window=600):
+    """Public demo: cap sandbox runs per client so nobody can burn the inference budget."""
+    ip = req.headers.get("x-forwarded-for", req.client.host).split(",")[0].strip()
+    q, now = _hits[ip], time.time()
+    while q and now - q[0] > window:
+        q.popleft()
+    if len(q) >= limit:
+        raise HTTPException(429, "Demo limit reached: 12 sandbox runs per 10 minutes. Try again shortly.")
+    q.append(now)
 
 
 def _start(email, att_dir):
@@ -48,7 +63,8 @@ def stats():
 
 
 @app.post("/api/inbox/{email_id}/process")
-def process(email_id: str):
+def process(email_id: str, req: Request):
+    _rate_limit(req)
     email = next((e for e in _inbox() if e["id"] == email_id), None)
     if not email:
         raise HTTPException(404)
@@ -57,7 +73,9 @@ def process(email_id: str):
 
 @app.post("/api/upload")
 async def upload(file: UploadFile = File(...), from_email: str = Form("unknown@external.example"),
-                 from_name: str = Form("Uploaded by user"), subject: str = Form("Uploaded invoice"), body: str = Form("")):
+                 from_name: str = Form("Uploaded by user"), subject: str = Form("Uploaded invoice"), body: str = Form(""),
+                 req: Request = None):
+    _rate_limit(req)
     ext = pathlib.Path(file.filename or "").suffix.lower()
     if ext not in ALLOWED:
         raise HTTPException(400, f"Allowed: {', '.join(sorted(ALLOWED))}")

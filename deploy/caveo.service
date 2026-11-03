@@ -1,0 +1,15 @@
+[Unit]
+Description=Caveo AP fraud-control agent
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+User=caveo
+WorkingDirectory=/opt/caveo/app
+EnvironmentFile=/opt/caveo/.env
+EnvironmentFile=-/etc/caveo-runtime.env
+ExecStart=/opt/caveo/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8088
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
