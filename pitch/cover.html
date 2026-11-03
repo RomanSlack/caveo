@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Caveo deck</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:oklch(0.975 0.004 170);--fg:oklch(0.24 0.03 170);--muted:oklch(0.50 0.02 170);--border:oklch(0.86 0.01 170);
+--brand:oklch(0.36 0.06 170);--signal:oklch(0.60 0.20 33);--signal-ink:oklch(0.50 0.17 33);--pass:oklch(0.50 0.10 155);
+--ch:oklch(0.19 0.02 170);--chl:oklch(0.27 0.025 170);--chf:oklch(0.92 0.01 170);--chm:oklch(0.65 0.02 170)}
+@page{size:1920px 1080px;margin:0}
+*{box-sizing:border-box}body{margin:0;font-family:"Schibsted Grotesk",sans-serif;color:var(--fg);background:#888}
+.s{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--bg);padding:110px 130px;page-break-after:always;display:flex;flex-direction:column}
+.s.dark{background:var(--ch);color:var(--chf);background-image:linear-gradient(var(--chl) 1px,transparent 1px),linear-gradient(90deg,var(--chl) 1px,transparent 1px);background-size:48px 48px}
+.k{font:600 22px/1 "IBM Plex Mono";letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;gap:18px;align-items:center}
+.dark .k{color:var(--chm)}
+.k b{color:var(--signal)}
+h1{font-size:132px;line-height:.95;letter-spacing:-.035em;font-weight:800;margin:0}
+h2{font-size:80px;line-height:1.02;letter-spacing:-.03em;font-weight:800;margin:28px 0 0;max-width:1500px}
+p.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1300px;margin:36px 0 0}
+.dark p.lead{color:var(--chm)}
+.mono{font-family:"IBM Plex Mono"}
+.foot{position:absolute;left:130px;right:130px;bottom:56px;display:flex;justify-content:space-between;font:500 20px "IBM Plex Mono";color:var(--muted)}
+.dark .foot{color:var(--chm)}
+.mark{display:inline-grid;place-items:center;width:64px;height:64px;border:5px solid var(--brand);border-radius:8px}
+.mark i{width:22px;height:22px;background:var(--signal);border-radius:3px}
+.dark .mark{border-color:var(--chf)}
+.stamp{display:inline-block;font:800 64px/1 "Schibsted Grotesk";letter-spacing:.08em;color:var(--signal);border:7px solid var(--signal);border-radius:10px;padding:18px 30px;transform:rotate(-3deg)}
+.row{display:grid;gap:56px;margin-top:64px;flex:1;min-height:0}
+.shot{border:2px solid var(--border);border-radius:12px;overflow:hidden;background:white}
+.shot img{display:block;width:100%}
+.big{font:800 220px/0.9 "Schibsted Grotesk";letter-spacing:-.04em;color:var(--signal)}
+ol.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+ol.steps li{border-top:6px solid var(--brand);padding-top:26px}
+ol.steps li.sig{border-color:var(--signal)}
+ol.steps b{display:block;font-size:40px;letter-spacing:-.02em}
+ol.steps span{display:block;font-size:27px;line-height:1.4;color:var(--muted);margin-top:14px}
+table{border-collapse:collapse;width:100%;font-size:30px}
+td{padding:20px 0;border-bottom:2px dashed var(--chl);vertical-align:top}
+td:first-child{width:430px;color:var(--chm);font:500 26px/1.5 "IBM Plex Mono";text-transform:uppercase;letter-spacing:.06em}
+td.v{color:oklch(0.85 0.09 155)}
+.blk{display:inline-block;font:600 22px "IBM Plex Mono";color:var(--signal);border:2px solid var(--signal);padding:4px 10px;border-radius:5px;margin-right:12px}
+.quote{font:500 30px/1.5 "IBM Plex Mono";background:oklch(0.50 0.17 33);color:white;padding:28px 34px;border-radius:10px;margin-top:40px}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:64px}
+.cols3 div{border-top:2px solid var(--border);padding-top:24px}
+.cols3 h3{font-size:40px;margin:0;letter-spacing:-.02em}
+.cols3 p{font-size:27px;line-height:1.45;color:var(--muted);margin:14px 0 0}
+.tag{font:600 20px "IBM Plex Mono";letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:5px;border:2px solid}
+.tq{color:var(--signal-ink);border-color:var(--signal)}.tr{color:var(--pass);border-color:var(--pass)}
+pre.arch{font:500 25px/1.55 "IBM Plex Mono";color:var(--chf);margin:56px 0 0;white-space:pre}
+pre.arch em{font-style:normal;color:var(--signal)}pre.arch b{color:oklch(0.85 0.09 155);font-weight:500}
+</style></head><body>
+<section class="s dark" style="padding:100px 110px;display:grid;grid-template-columns:1fr 1.05fr;gap:70px;align-items:center">
+  <div>
+    <div class="k"><span class="mark"><i></i></span><span style="color:var(--chf)">Vultr Agent Rush</span></div>
+    <h1 style="font-size:200px;margin-top:60px">Caveo</h1>
+    <p class="lead" style="font-size:50px;color:var(--chf);margin-top:24px">The AP clerk that can't be phished.</p>
+    <div class="stamp" style="margin-top:70px">QUARANTINED</div>
+  </div>
+  <div class="shot" style="border-color:var(--chl);transform:rotate(1.5deg)"><img src="img/reveal.png" alt=""></div>
+</section></body></html>
