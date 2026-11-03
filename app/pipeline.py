@@ -5,7 +5,7 @@
   3. deterministic policy engine checks vendor master, bank details, PO, sender, behavior
   4. model writes the case note; a human makes the payment decision
 """
-import base64, json, os, pathlib, uuid
+import base64, hashlib, json, os, pathlib, uuid
 import llm, policy, sandbox, store
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "data"
@@ -42,7 +42,8 @@ def _process(cid, email, att_dir, log):
     out_dir.mkdir(parents=True, exist_ok=True)
     results = []
     for att in email["attachments"]:
-        log("sandbox", f"Opening {att} inside a throwaway sandbox. The host never opens it.")
+        digest = hashlib.sha256((att_dir / att).read_bytes()).hexdigest()  # hashing reads bytes; it never parses the file
+        log("sandbox", f"Opening {att} inside a throwaway sandbox. The host never opens it.", {"sha256": digest})
         sb = sandbox.run_attachment(str(att_dir / att), log)
         rep = sb["report"] or {}
         probes = rep.get("probes", {})
@@ -75,7 +76,7 @@ def _process(cid, email, att_dir, log):
         for f in verdict["findings"]:
             log("policy", f"[{f['severity'].upper()}] {f['title']}", f)
         slim = {k: v for k, v in rep.items() if k != "pages"}
-        results.append({"attachment": att, "sandbox_id": sb["sandbox_id"], "sandbox_status": sb["status"],
+        results.append({"attachment": att, "sha256": digest, "sandbox_id": sb["sandbox_id"], "sandbox_status": sb["status"],
                         "pages": pages, "report": slim, "fields": fields, **verdict})
 
     order = policy.SEV_ORDER

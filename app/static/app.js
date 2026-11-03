@@ -168,15 +168,17 @@ function renderEvidence(r, e) {
     <ul class="findings" style="margin-top:0">${findings}</ul>`;
 }
 
+const evLink = (c) => `<a class="ev" href="/api/cases/${esc(c.id)}/evidence" download>Evidence pack ↓</a>`;
 function renderDecision(c, results) {
   if (c.status !== "awaiting_human") {
     const h = c.data.human || {};
     return `<div class="decision"><div class="why"><b>${esc(LABEL[c.status])}</b> by a human${h.note ? ": " + esc(h.note) : ""}.
-      ${h.callback_verified ? " Vendor verified by phone." : ""}</div></div>`;
+      ${h.callback_verified ? " Vendor verified by phone." : ""}</div>${evLink(c)}</div>`;
   }
   const phone = results.map((r) => r.vendor && r.vendor.phone_on_file).find(Boolean);
   if (c.decision === "quarantined") {
     return `<div class="decision"><div class="why"><b>Payment blocked by policy.</b> Quarantined cases cannot be approved from this screen.</div>
+      ${evLink(c)}
       <button class="btn danger" type="button" data-act="reject">Reject invoice</button>
       <button class="btn primary" type="button" data-act="escalate">Escalate to security</button>
       <p class="err" id="dec-err" role="alert"></p></div>`;
@@ -185,6 +187,7 @@ function renderDecision(c, results) {
   return `<div class="decision">
       ${hold ? `<label class="cb"><input type="checkbox" id="cb-callback"> I called the vendor at ${esc(phone || "the number on file")} (from our records, not the email) and they confirmed this invoice.</label>` : ""}
       <div class="why">${hold ? "<b>On hold.</b> Verify by phone before paying." : "<b>All controls passed.</b> A human still makes the call."}</div>
+      ${evLink(c)}
       <button class="btn ghost" type="button" data-act="reject">Reject</button>
       <button class="btn primary" type="button" data-act="approve">Approve payment</button>
       <p class="err" id="dec-err" role="alert"></p></div>`;
@@ -288,6 +291,26 @@ $("#upload-form").addEventListener("submit", async (ev) => {
     renderInbox();
     await loadCase(case_id);
   } catch (err) { $("#upload-err").textContent = err.message; }
+  btn.disabled = false;
+});
+
+const cdlg = $("#craft-dlg");
+$("#btn-craft").addEventListener("click", () => { $("#craft-err").textContent = ""; cdlg.showModal(); });
+$("#craft-cancel").addEventListener("click", () => cdlg.close());
+$("#craft-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const btn = ev.submitter; btn.disabled = true;
+  const f = new FormData(ev.target);
+  const body = Object.fromEntries(f.entries()); body.urgency = f.has("urgency");
+  try {
+    const { case_id } = await api("/api/craft", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    cdlg.close();
+    const c = await api(`/api/cases/${case_id}`);
+    state.inbox.unshift({ ...c.data.email, case: { id: c.id, status: c.status } });
+    state.selected = c.email_id;
+    renderInbox();
+    await loadCase(case_id);
+  } catch (err) { $("#craft-err").textContent = err.message; }
   btn.disabled = false;
 });
 

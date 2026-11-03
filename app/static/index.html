@@ -24,6 +24,7 @@
     <div><b id="st-secrets">0</b><span>secrets exposed</span></div>
   </div>
   <div class="top-actions">
+    <button class="btn primary" id="btn-craft" type="button">Craft an attack</button>
     <button class="btn" id="btn-upload" type="button">Upload invoice</button>
     <button class="btn ghost" id="btn-reset" type="button">Reset demo</button>
   </div>
@@ -74,6 +75,31 @@
     <div class="dlg-actions">
       <button class="btn ghost" type="button" id="upload-cancel">Cancel</button>
       <button class="btn primary" type="submit">Open in sandbox</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="craft-dlg">
+  <form id="craft-form" method="dialog">
+    <h2>Craft an attack</h2>
+    <p class="muted">Build your own fraudulent invoice. Caveo generates the PDF, then runs it through the same sandbox and rules as everything else. Try to get a payment approved.</p>
+    <label>Pretend to be
+      <select name="vendor_id"><option value="V-1002">Brightline Logistics (PO-7790, $48,900)</option>
+        <option value="V-1001">Northwind Industrial Supply (PO-7781, $4,812.50)</option>
+        <option value="V-1003">Summit Office Co (PO-7802, $1,265.40)</option></select></label>
+    <label>Send from
+      <select name="sender"><option value="lookalike">A lookalike domain</option><option value="real">The vendor's real domain (hacked mailbox)</option></select></label>
+    <label>Pay to
+      <select name="bank"><option value="changed">A new bank account (yours)</option><option value="on_file">The bank account on file</option></select></label>
+    <label>Hide an instruction for the AI
+      <select name="injection"><option value="hidden">White 1.5pt text</option><option value="covered">Text under a white box</option>
+        <option value="metadata">In the PDF metadata</option><option value="none">No injection</option></select></label>
+    <label>Amount
+      <select name="amount"><option value="match">Matches the PO</option><option value="inflated">18% over the PO</option></select></label>
+    <label class="inline"><input type="checkbox" name="urgency" checked> Add pressure ("pay today, don't call us")</label>
+    <p class="form-err" id="craft-err" role="alert"></p>
+    <div class="dlg-actions">
+      <button class="btn ghost" type="button" id="craft-cancel">Cancel</button>
+      <button class="btn primary" type="submit">Build it and send</button>
     </div>
   </form>
 </dialog>

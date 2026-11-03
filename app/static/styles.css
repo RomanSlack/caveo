@@ -166,6 +166,8 @@ table.fields { width: 100%; border-collapse: collapse; font-size: 14px; }
   border-top: 1px solid var(--border-strong); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .decision .why { flex: 1; min-width: 220px; font-size: 14px; color: var(--muted); }
 .decision .why b { color: var(--fg); }
+.decision a.ev { font: 500 12px var(--f-mono); color: var(--muted); }
+.decision a.ev:hover { color: var(--fg); }
 .decision label.cb { display: flex; align-items: center; gap: 8px; font-size: 14px; flex-basis: 100%; }
 .decision input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--brand); }
 .decision .err { color: var(--signal-ink); font-size: 13px; flex-basis: 100%; margin: 0; }
@@ -215,6 +217,9 @@ dialog { border: 1px solid var(--border-strong); border-radius: var(--r-md); pad
 dialog::backdrop { background: oklch(0.19 0.02 170 / 0.55); }
 dialog h2 { font-size: var(--t2); }
 dialog label { display: block; font-size: 13px; font-weight: 600; margin-top: 14px; }
+dialog select { display: block; width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--bg); font-weight: 400; }
+dialog label.inline { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+dialog label.inline input { width: 18px; height: 18px; margin: 0; accent-color: var(--brand); }
 dialog input, dialog textarea { display: block; width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--bg); font-weight: 400; }
 .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 .form-err { color: var(--signal-ink); font-size: 13px; margin: 10px 0 0; min-height: 1em; }
