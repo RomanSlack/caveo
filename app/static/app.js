@@ -373,7 +373,7 @@ let touring = false, tourNext = null;
 function caption(step, text, nextLabel = "Next") {
   $("#tour").hidden = false; $("#tour-step").textContent = step; $("#tour-text").textContent = text; $("#tour-next").textContent = nextLabel;
 }
-function hold(ms) { return new Promise((r) => { const t = setTimeout(r, ms); tourNext = () => { clearTimeout(t); r(); }; }); }
+function hold(ms) { if (window.__tourManual) ms = 1e9; /* video recorder advances steps itself */ return new Promise((r) => { const t = setTimeout(r, ms); tourNext = () => { clearTimeout(t); r(); }; }); }
 function spot(el) { document.querySelectorAll(".spot").forEach((x) => x.classList.remove("spot")); if (el) { el.classList.add("spot"); el.scrollIntoView({ behavior: "smooth", block: "center" }); } }
 $("#tour-next").addEventListener("click", () => tourNext && tourNext());
 $("#tour-skip").addEventListener("click", endTour);

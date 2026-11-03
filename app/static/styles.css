@@ -233,6 +233,9 @@ dialog input, dialog textarea { display: block; width: 100%; margin-top: 6px; pa
 @media (max-width: 760px) {
   .top { grid-template-columns: 1fr; gap: 12px; padding: 12px 16px; }
   .org { display: none; }
+  .top-actions { flex-wrap: nowrap; gap: 6px; }
+  .top-actions .btn { white-space: nowrap; min-height: 34px; padding: 0 10px; font-size: 13px; }
+  .top-actions #btn-reset { padding: 0 6px; }
   .grid { grid-template-columns: minmax(0, 1fr); }
   .rail { min-width: 0; }
   .rail { border-right: 0; border-bottom: 1px solid var(--border); }
