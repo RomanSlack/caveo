@@ -86,6 +86,8 @@ def _process(cid, email, att_dir, log):
                         "findings": [{k: f[k] for k in ("severity", "title", "detail")} for f in worst["findings"]],
                         "vendor_phone_on_file": (worst.get("vendor") or {}).get("phone_on_file")})
     log("model", "Case note written", {"seconds": note["seconds"]})
+    if email.get("crafted"):
+        store.attack_verdict(cid, worst["decision"])
     store.update_case(cid, status="awaiting_human", risk=worst["risk"], decision=worst["decision"],
                       data={"results": results, "note": note["content"].strip()})
     log("decision", {"quarantined": "Payment BLOCKED and attachment quarantined. Security review required.",

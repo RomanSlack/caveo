@@ -11,7 +11,8 @@ const LABEL = { quarantined: "Quarantined", hold: "On hold", review: "Review", r
   approved: "Paid", rejected: "Rejected", escalated: "Escalated", processing: "In sandbox", error: "Error" };
 const money = (n) => (typeof n === "number" ? "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—");
 
-let state = { inbox: [], selected: null, caseData: null, revealed: false };
+let state = { inbox: [], selected: null, caseData: null, revealed: false, stats: null };
+const EMPTY = document.querySelector("#case").innerHTML;
 
 function caseLabel(c) {
   if (!c) return null;
@@ -122,11 +123,24 @@ function renderCase(c) {
     $("#case").innerHTML = html;
     return;
   }
+  if (e.crafted) html += craftBanner(e.crafted, c, results);
   if (c.data.note) html += `<div class="note"><p>${esc(c.data.note)}</p><span class="by">Read by qwen3.8-27b · note by glm-5.3 · Vultr Serverless Inference · cannot change the verdict</span></div>`;
   for (const r of results) html += renderEvidence(r, e);
   html += renderDecision(c, results);
   $("#case").innerHTML = html;
   wireCase(c);
+}
+
+function craftBanner(k, c, results) {
+  const malicious = k.sender === "lookalike" || k.bank === "changed" || k.injection !== "none" || k.amount === "inflated";
+  const hits = results.flatMap((r) => r.findings).filter((f) => ["critical", "high", "medium"].includes(f.severity));
+  if (!malicious) return `<div class="banner"><b>That invoice was legitimate, so Caveo passed it to a human.</b>
+      <p>Real domain, bank on file, matching PO, no hidden text. Now try to sneak a fraud past it.</p>
+      <button class="btn small" type="button" data-craft>Craft an attack</button></div>`;
+  if (c.decision === "ready") return `<div class="banner caught"><b>You beat Caveo.</b><p>This fraud reached "ready to pay". Please tell us how!</p></div>`;
+  return `<div class="banner caught"><b>Caught. Your attack tripped ${hits.length} rule${hits.length === 1 ? "" : "s"}.</b>
+      <p>${hits.map((f) => esc(f.title)).join(" · ")}</p>
+      <button class="btn small" type="button" data-craft>Try another attack</button></div>`;
 }
 
 function renderEvidence(r, e) {
@@ -225,6 +239,20 @@ function resetChamber() {
 }
 
 let renderedEvents = { case: null, n: 0 };
+const logQueue = []; let logDraining = false;
+const isBlocked = (x) => x.kind === "containment" && (x.msg.startsWith("BLOCKED") || x.msg.startsWith("Caught"));
+async function drainLog() {
+  if (logDraining) return;
+  logDraining = true;
+  while (logQueue.length) {
+    const f = logQueue.shift();
+    $("#log").insertAdjacentHTML("beforeend", f.html);
+    $("#log").scrollTop = $("#log").scrollHeight;
+    await new Promise((r) => setTimeout(r, f.blocked ? 420 : 140));
+  }
+  logDraining = false;
+  if (state.caseData) renderChamber(state.caseData);
+}
 function renderChamber(c) {
   const ev = c.events;
   const created = ev.find((x) => x.msg.startsWith("Created sandbox"));
@@ -244,25 +272,28 @@ function renderChamber(c) {
     ].map(([k, v]) => `<dt>${k}</dt><dd class="${String(v).includes("OPEN") || (k === "secrets" && secrets) ? "warn" : ""}">${esc(v)}</dd>`).join("");
   }
 
-  if (renderedEvents.case !== c.id) { renderedEvents = { case: c.id, n: 0 }; $("#log").innerHTML = ""; }
+  if (renderedEvents.case !== c.id) { renderedEvents = { case: c.id, n: 0 }; $("#log").innerHTML = ""; logQueue.length = 0; }
   const t0 = ev.length ? ev[0].ts : 0;
   const fresh = ev.slice(renderedEvents.n).map((x) => {
-    const blocked = x.kind === "containment" && (x.msg.startsWith("BLOCKED") || x.msg.startsWith("Caught"));
+    const blocked = isBlocked(x);
     const msg = blocked ? x.msg.replace(/^BLOCKED /, "") : x.msg;
-    return `<li class="k-${esc(x.kind)} ${blocked ? "blocked" : ""}"><span class="t">+${(x.ts - t0).toFixed(1)}s</span><span class="m">${esc(msg)}</span></li>`;
-  }).join("");
-  if (fresh) {
-    $("#log").insertAdjacentHTML("beforeend", fresh);
-    renderedEvents.n = ev.length;
+    return { blocked, html: `<li class="k-${esc(x.kind)} ${blocked ? "blocked" : ""}"><span class="t">+${(x.ts - t0).toFixed(1)}s</span><span class="m">${esc(msg)}</span></li>` };
+  });
+  renderedEvents.n = ev.length;
+  // a whole first view of an old case renders at once; live events drip in so each BLOCKED row is seen
+  if (fresh.length && c.status !== "processing" && !logDraining && $("#log").children.length === 0) {
+    $("#log").innerHTML = fresh.map((f) => f.html).join("");
     $("#log").scrollTop = $("#log").scrollHeight;
-  }
+  } else if (fresh.length) { logQueue.push(...fresh); drainLog(); }
 
   const seal = $("#seal");
-  if (destroyed) {
+  if (destroyed && !logDraining && !logQueue.length) {
     const blockedN = ev.filter((x) => x.kind === "containment" && (x.msg.startsWith("BLOCKED") || x.msg.startsWith("Caught"))).length;
     const hiddenN = ev.filter((x) => x.kind === "detect").length;
     const parts = [blockedN && `${blockedN} attempt${blockedN === 1 ? "" : "s"} blocked`, hiddenN && `${hiddenN} hidden instruction${hiddenN === 1 ? "" : "s"} neutralized`].filter(Boolean);
-    seal.innerHTML = `<b>Sandbox destroyed</b>${esc(destroyed.data.sandbox_id)} · ${esc(destroyed.data.seconds)}s · ${esc(parts.join(" · ") || "nothing suspicious")} · nothing persisted`;
+    const caught = ev.filter(isBlocked).map((x) => x.msg.replace(/^BLOCKED /, "").replace(/^Caught attachment script: /, "")).slice(0, 6);
+    seal.innerHTML = `<b>Sandbox destroyed</b>${esc(destroyed.data.sandbox_id)} · ${esc(destroyed.data.seconds)}s · ${esc(parts.join(" · ") || "nothing suspicious")} · nothing persisted`
+      + (caught.length ? `<ul class="seal-list">${caught.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>` : "");
     seal.hidden = false;
   } else seal.hidden = true;
 }
@@ -271,7 +302,10 @@ function renderChamber(c) {
 async function loadStats() {
   try {
     const s = await api("/api/stats");
-    $("#st-live").textContent = s.live; $("#st-destroyed").textContent = s.destroyed;
+    state.stats = s;
+    $("#st-destroyed").textContent = s.destroyed;
+    $("#st-tried").textContent = s.attacks_tried; $("#st-slipped").textContent = s.attacks_slipped;
+    $("#craft-score").textContent = `${s.attacks_tried} attack${s.attacks_tried === 1 ? "" : "s"} tried by visitors so far. ${s.attacks_slipped} got paid.`;
     $("#st-blocked").textContent = s.blocked; $("#st-secrets").textContent = s.secrets_exposed;
   } catch (e) { /* stats are decorative; ignore */ }
 }
@@ -295,7 +329,12 @@ $("#upload-form").addEventListener("submit", async (ev) => {
 });
 
 const cdlg = $("#craft-dlg");
-$("#btn-craft").addEventListener("click", () => { $("#craft-err").textContent = ""; cdlg.showModal(); });
+const openCraft = () => { $("#craft-err").textContent = ""; loadStats(); cdlg.showModal(); };
+$("#btn-craft").addEventListener("click", openCraft);
+document.addEventListener("click", (ev) => {
+  if (ev.target.closest("[data-craft]")) openCraft();
+  if (ev.target.closest("[data-tour]")) tour();
+});
 $("#craft-cancel").addEventListener("click", () => cdlg.close());
 $("#craft-form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
@@ -318,8 +357,7 @@ $("#btn-reset").addEventListener("click", async () => {
   if (!confirm("Clear all cases and start the demo over?")) return;
   await api("/api/reset", { method: "POST" });
   state.selected = null; state.caseData = null;
-  $("#case").innerHTML = `<div class="empty"><h1>Every invoice is guilty until the sandbox says otherwise.</h1>
-    <p>Pick an email on the left and run Caveo.</p></div>`;
+  $("#case").innerHTML = EMPTY;
   resetChamber(); loadInbox(); loadStats();
 });
 
@@ -327,3 +365,64 @@ loadInbox();
 loadStats();
 setInterval(loadStats, 1500);
 setInterval(() => { if (!state.caseData || state.caseData.status !== "processing") loadInbox(); }, 4000);
+
+
+/* ---------------- guided tour ---------------- */
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let touring = false, tourNext = null;
+function caption(step, text, nextLabel = "Next") {
+  $("#tour").hidden = false; $("#tour-step").textContent = step; $("#tour-text").textContent = text; $("#tour-next").textContent = nextLabel;
+}
+function hold(ms) { return new Promise((r) => { const t = setTimeout(r, ms); tourNext = () => { clearTimeout(t); r(); }; }); }
+function spot(el) { document.querySelectorAll(".spot").forEach((x) => x.classList.remove("spot")); if (el) { el.classList.add("spot"); el.scrollIntoView({ behavior: "smooth", block: "center" }); } }
+$("#tour-next").addEventListener("click", () => tourNext && tourNext());
+$("#tour-skip").addEventListener("click", endTour);
+function endTour() { touring = false; $("#tour").hidden = true; spot(null); if (tourNext) tourNext(); }
+
+async function openAndWait(emailId) {
+  await loadInbox();
+  const e = state.inbox.find((x) => x.id === emailId);
+  await select(emailId);
+  if (!e.case) await run(emailId);
+  while (touring) {
+    const c = state.caseData;
+    if (c && c.email_id === emailId && c.status !== "processing" && !logDraining && !logQueue.length) { await sleep(600); return state.caseData; }
+    await sleep(300);
+  }
+  throw new Error("tour ended");
+}
+
+async function tour() {
+  if (touring) return;
+  touring = true;
+  try {
+    caption("1 / 6 · The setup", "Granite Peak Outdoors pays vendor invoices all day. This email says: our bank changed, please pay today.");
+    await loadInbox(); await select("msg-002"); spot(document.querySelector('.mail[data-id="msg-002"]'));
+    await hold(6000); if (!touring) return;
+
+    caption("2 / 6 · Into the airlock", "Caveo never opens the attachment on the server. It goes into a throwaway gVisor sandbox on Vultr: no internet, no secrets, hard limits. Watch the Chamber.");
+    spot($("#chamber"));
+    await openAndWait("msg-002"); await hold(2500); if (!touring) return;
+
+    caption("3 / 6 · The verdict", "Quarantined. The email came from a lookalike domain, and the bank account doesn't match the one on file.");
+    spot(document.querySelector(".fields")); await hold(7000); if (!touring) return;
+
+    caption("4 / 6 · What the AI was told", "Now the twist. Hidden white 1.5pt text orders the AI to approve the payment. Caveo's model reported it instead of obeying it.");
+    const rb = $("#btn-reveal"); if (rb && !state.revealed) rb.click();
+    spot($("#shot")); await hold(8000); if (!touring) return;
+
+    caption("5 / 6 · A booby trap", "This 'secure invoice viewer' attacks the moment it opens. Watch it hit the walls.");
+    spot($("#chamber"));
+    const c = await openAndWait("msg-003");
+    const n = c.events.filter((x) => x.kind === "containment" && (x.msg.startsWith("BLOCKED") || x.msg.startsWith("Caught"))).length;
+    caption("5 / 6 · Contained", `${n} attempts to steal cookies, tokens and a password, all blocked. Then the sandbox was destroyed. Nothing touched the server.`);
+    spot($("#seal")); await hold(8000); if (!touring) return;
+
+    const s = state.stats || { attacks_tried: 0, attacks_slipped: 0 };
+    caption("6 / 6 · Your turn", `Build your own fake invoice and try to get it paid. So far ${s.attacks_slipped} of ${s.attacks_tried} visitor attacks have.`, "Try it");
+    spot($("#btn-craft"));
+    await hold(60000);
+    if (touring) { endTour(); openCraft(); }
+  } catch (e) { /* tour ended early */ } finally { touring = false; }
+}
+if (location.hash === "#tour") setTimeout(tour, 800);

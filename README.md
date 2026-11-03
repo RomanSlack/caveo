@@ -1,6 +1,8 @@
 # Caveo
 
-**The accounts-payable clerk that can't be phished.**
+**An airlock for your invoices.**
+
+Live: https://caveo-144-202-120-235.sslip.io (open it and press **Watch the 60-second tour**, or go straight to https://caveo-144-202-120-235.sslip.io/#tour)
 
 Caveo (Latin, *"I guard against"*, the root of *caveat*) is an AI agent for accounts payable. It opens every vendor
 invoice, attachment and link inside a throwaway sandbox on Vultr, reads it with a vision model, checks it against
@@ -54,10 +56,11 @@ and compares Caveo with a naive AI approver built on the same Vultr model. Full 
 The red team also found real gaps, which we fixed: text covered by a white box, and text placed outside the page, were
 invisible to the first version of the detector.
 
-## Try to beat it
+## Try to beat it (the scoreboard)
 **Craft an attack** in the top bar builds a fraudulent invoice from your choices (vendor to impersonate, lookalike or
 hacked real domain, new bank account, where to hide the AI instruction, inflated amount, pressure) and runs it through the
 same sandbox and rules. A fully legitimate combination passes, so the rules are not just blocking everything.
+The top bar keeps a public scoreboard of visitor attacks and how many got paid. It survives demo resets.
 Every case downloads as an **evidence pack** (JSON: email, attachment SHA-256, findings, full audit log) for the bank's
 fraud team or the auditors.
 

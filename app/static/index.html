@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Caveo · the AP clerk that can't be phished</title>
+<title>Caveo · an airlock for your invoices</title>
 <meta name="description" content="Caveo opens every invoice in a throwaway Vultr sandbox, checks it against your vendor master, and holds payment for a human.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,10 +18,10 @@
     <span class="org">Granite Peak Outdoors <i>/</i> Accounts Payable</span>
   </div>
   <div class="stats" aria-live="polite">
-    <div><b id="st-live">0</b><span>sandboxes live</span></div>
     <div><b id="st-destroyed">0</b><span>destroyed</span></div>
-    <div><b id="st-blocked">0</b><span>attempts blocked</span></div>
-    <div><b id="st-secrets">0</b><span>secrets exposed</span></div>
+    <div><b id="st-blocked">0</b><span>blocked</span></div>
+    <div><b id="st-secrets">0</b><span>secrets leaked</span></div>
+    <div class="score" title="Visitors who tried to get a fake invoice paid with Craft an attack"><b><span id="st-slipped">0</span>/<span id="st-tried">0</span></b><span>visitor attacks paid</span></div>
   </div>
   <div class="top-actions">
     <button class="btn primary" id="btn-craft" type="button">Craft an attack</button>
@@ -42,8 +42,13 @@
 
   <section class="case" id="case" aria-live="polite">
     <div class="empty">
-      <h1>Every invoice is guilty until the sandbox says otherwise.</h1>
-      <p>Pick an email on the left and run Caveo. Each attachment is opened in a throwaway container on Vultr with no network and no secrets, read by a vision model, checked against your vendor master, and held for a human.</p>
+      <p class="eyebrow">Caveo · Latin for "I guard against"</p>
+      <h1>An airlock for your invoices.</h1>
+      <p>Fake "we changed banks" invoices cost US businesses $3 billion a year, and now they hide orders for the AI that reads them. Caveo opens every attachment in a throwaway sandbox on Vultr, checks it against your vendor records, and never lets a model decide to pay.</p>
+      <div class="empty-actions">
+        <button class="btn primary big" type="button" data-tour>Watch the 60-second tour</button>
+        <button class="btn big" type="button" data-craft>Try to beat it</button>
+      </div>
     </div>
   </section>
 
@@ -82,6 +87,7 @@
   <form id="craft-form" method="dialog">
     <h2>Craft an attack</h2>
     <p class="muted">Build your own fraudulent invoice. Caveo generates the PDF, then runs it through the same sandbox and rules as everything else. Try to get a payment approved.</p>
+    <p class="score-line" id="craft-score"></p>
     <label>Pretend to be
       <select name="vendor_id"><option value="V-1002">Brightline Logistics (PO-7790, $48,900)</option>
         <option value="V-1001">Northwind Industrial Supply (PO-7781, $4,812.50)</option>
@@ -103,6 +109,12 @@
     </div>
   </form>
 </dialog>
+<div class="tour" id="tour" hidden role="status" aria-live="polite">
+  <span class="tour-step" id="tour-step"></span>
+  <p id="tour-text"></p>
+  <div class="tour-actions"><button class="btn small ghost" type="button" id="tour-skip">End tour</button>
+    <button class="btn small primary" type="button" id="tour-next">Next</button></div>
+</div>
 <script src="/app.js"></script>
 </body>
 </html>

@@ -16,6 +16,7 @@ def init():
         c.executescript("""
         CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, email_id TEXT, created REAL, status TEXT,
                                           risk TEXT, decision TEXT, data TEXT);
+        CREATE TABLE IF NOT EXISTS attacks (case_id TEXT PRIMARY KEY, ts REAL, choices TEXT, malicious INTEGER, verdict TEXT);
         CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, case_id TEXT, ts REAL,
                                            kind TEXT, msg TEXT, data TEXT);""")
 
@@ -74,3 +75,21 @@ def stats():
         return {"destroyed": q("SELECT COUNT(*) FROM events WHERE msg LIKE 'Destroyed sandbox%'"),
                 "blocked": q("SELECT COUNT(*) FROM events WHERE kind='containment' AND (msg LIKE 'BLOCKED%' OR msg LIKE 'Caught%')"),
                 "secrets_exposed": secrets}
+
+
+def record_attack(cid, choices, malicious):
+    """Beat-Caveo scoreboard. Lives in its own table so 'Reset demo' never wipes it."""
+    with _lock, _conn() as c:
+        c.execute("INSERT OR REPLACE INTO attacks VALUES (?,?,?,?,?)", (cid, time.time(), json.dumps(choices), int(malicious), None))
+
+
+def attack_verdict(cid, verdict):
+    with _lock, _conn() as c:
+        c.execute("UPDATE attacks SET verdict=? WHERE case_id=?", (verdict, cid))
+
+
+def scoreboard():
+    with _lock, _conn() as c:
+        tried = c.execute("SELECT COUNT(*) FROM attacks WHERE malicious=1 AND verdict IS NOT NULL").fetchone()[0]
+        paid = c.execute("SELECT COUNT(*) FROM attacks WHERE malicious=1 AND verdict='ready'").fetchone()[0]
+        return {"attacks_tried": tried, "attacks_slipped": paid}
