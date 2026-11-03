@@ -37,7 +37,13 @@
   <nav class="rail" aria-label="Inbox">
     <div class="rail-head">
       <h2>Inbox</h2>
-      <button class="btn small" id="btn-run-all" type="button">Run all</button>
+      <div class="rail-btns"><button class="btn small" id="btn-activity" type="button">Activity</button>
+      <button class="btn small" id="btn-run-all" type="button">Run all</button></div>
+    </div>
+    <div class="live-inbox" id="live-inbox" hidden>
+      <span class="dot" aria-hidden="true"></span>
+      <div><b>Live inbox</b><span>Email any invoice from your own phone:</span>
+        <a class="addr-copy" id="inbound-addr" href="#"></a><span class="copied" id="copied" role="status"></span></div>
     </div>
     <ul id="inbox" class="inbox"></ul>
     <p class="rail-foot">ap@granitepeak.example · vendor master: 3 vendors · open POs: 3</p>

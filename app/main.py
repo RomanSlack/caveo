@@ -5,7 +5,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import pipeline, store
+import inbound, pipeline, store, vault
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -46,12 +46,48 @@ def _start(email, att_dir):
     return cid
 
 
+@app.on_event("startup")
+def _inbound():
+    inbound.start(_start, UPLOADS)
+
+
+@app.get("/api/config")
+def config():
+    return {"inbound_address": inbound.ADDRESS if inbound.KEY else "", "inbound": inbound.status if inbound.KEY else {"enabled": False},
+            "vault": {"enabled": vault.enabled(), "host": vault.HOST, "bucket": vault.BUCKET}}
+
+
+@app.get("/api/activity")
+def activity():
+    cases = store.list_cases()
+    vendors, timeline, protected, injections = {}, [], 0.0, 0
+    for c in cases:
+        res = c["data"].get("results") or []
+        fields = (res[0].get("fields") if res else {}) or {}
+        codes = {f["code"] for r in res for f in r.get("findings", [])}
+        injections += "prompt_injection" in codes
+        total = fields.get("total") if isinstance(fields.get("total"), (int, float)) else 0
+        flagged = c["decision"] in ("quarantined", "hold") or c["status"] in ("rejected", "escalated")
+        if flagged:
+            protected += total
+        v = ((res[0].get("vendor") or {}).get("name") if res else None) or fields.get("vendor_name") or c["data"]["email"].get("from_name") or "Unknown"
+        s = vendors.setdefault(v, {"vendor": v, "invoices": 0, "flagged": 0, "at_risk": 0.0, "last": 0})
+        s["invoices"] += 1; s["flagged"] += flagged; s["at_risk"] += total if flagged else 0; s["last"] = max(s["last"], c["created"])
+        timeline.append({"id": c["id"], "t": c["created"], "decision": c["decision"] or c["status"], "subject": c["data"]["email"]["subject"],
+                         "from": c["data"]["email"]["from_email"], "inbound": bool(c["data"]["email"].get("inbound")),
+                         "crafted": bool(c["data"]["email"].get("crafted")), "total": total, "email_id": c["email_id"]})
+    for s in vendors.values():
+        s["risk"] = round(100 * s["flagged"] / s["invoices"])
+    return {"protected": round(protected, 2), "cases": len(cases), "injections": injections, **store.stats(), **store.scoreboard(),
+            "vendors": sorted(vendors.values(), key=lambda x: (-x["risk"], -x["at_risk"])), "timeline": sorted(timeline, key=lambda x: -x["t"])[:40]}
+
+
 @app.get("/api/inbox")
 def inbox():
     latest = {}
     for c in store.list_cases():
         latest.setdefault(c["email_id"], c)
-    emails = [c["data"]["email"] for c in latest.values() if c["email_id"].startswith("up-")] + _inbox()
+    emails = [c["data"]["email"] for c in latest.values() if c["email_id"].startswith(("up-", "in-"))] + _inbox()
     return [{**e, "case": {k: latest[e["id"]][k] for k in ("id", "status", "risk", "decision")} if e["id"] in latest else None}
             for e in emails]
 
@@ -205,6 +241,9 @@ def evidence(cid: str):
             "attachments": [{k: r.get(k) for k in ("attachment", "sha256", "sandbox_id", "sandbox_status", "fields", "findings")}
                             for r in c["data"].get("results", [])],
             "audit_log": [{k: e[k] for k in ("ts", "kind", "msg", "data")} for e in c["events"]]}
+    if vault.enabled() and c["data"].get("vault"):
+        pack["vault"] = {"provider": "Vultr Object Storage", "host": vault.HOST, "bucket": vault.BUCKET,
+                         "objects": [{"key": k, "signed_url_1h": vault.signed(k)} for k in c["data"]["vault"]]}
     return JSONResponse(pack, headers={"Content-Disposition": f'attachment; filename="caveo-{cid}-evidence.json"'})
 
 

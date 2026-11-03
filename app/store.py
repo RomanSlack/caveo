@@ -16,6 +16,7 @@ def init():
         c.executescript("""
         CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, email_id TEXT, created REAL, status TEXT,
                                           risk TEXT, decision TEXT, data TEXT);
+        CREATE TABLE IF NOT EXISTS inbound (rid TEXT PRIMARY KEY, ts REAL, sender TEXT, processed INTEGER);
         CREATE TABLE IF NOT EXISTS attacks (case_id TEXT PRIMARY KEY, ts REAL, choices TEXT, malicious INTEGER, verdict TEXT);
         CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, case_id TEXT, ts REAL,
                                            kind TEXT, msg TEXT, data TEXT);""")
@@ -93,3 +94,14 @@ def scoreboard():
         tried = c.execute("SELECT COUNT(*) FROM attacks WHERE malicious=1 AND verdict IS NOT NULL").fetchone()[0]
         paid = c.execute("SELECT COUNT(*) FROM attacks WHERE malicious=1 AND verdict='ready'").fetchone()[0]
         return {"attacks_tried": tried, "attacks_slipped": paid}
+
+
+def inbound_seen(rid):
+    with _lock, _conn() as c:
+        return c.execute("SELECT 1 FROM inbound WHERE rid=?", (rid,)).fetchone() is not None
+
+
+def inbound_mark(rid, sender, processed):
+    with _lock, _conn() as c:
+        c.execute("INSERT INTO inbound VALUES (?,?,?,?) ON CONFLICT(rid) DO UPDATE SET processed=excluded.processed, sender=excluded.sender",
+                  (rid, time.time(), sender, processed))

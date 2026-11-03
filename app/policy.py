@@ -89,6 +89,17 @@ def evaluate(email, sandbox, fields, vendors, pos, history=()):
            "Someone wrote orders for an AI assistant into the invoice. Caveo treats them as evidence of fraud, not as instructions.",
            inj[:6] or ["(found in text layer)"])
 
+    # 2b. Real email authentication (inbound mail via Resend carries SPF/DKIM/DMARC verdicts)
+    auth = email.get("auth") or {}
+    failed = [k.upper() for k in ("spf", "dkim", "dmarc") if (auth.get(k) or "") in ("fail", "softfail")]
+    if failed:
+        _f(out, "high" if "DMARC" in failed else "medium", "auth_fail", f"Sender failed {', '.join(failed)}",
+           "The receiving mail server could not verify this email really came from the domain it claims.",
+           [f"{k}: {auth.get(k)}" for k in ("spf", "dkim", "dmarc") if auth.get(k)])
+    elif auth and all((auth.get(k) or "") == "pass" for k in ("spf", "dkim", "dmarc")):
+        _f(out, "pass", "auth_ok", "SPF, DKIM and DMARC all pass",
+           "The sending domain is authentic. That proves who sent it, not that the invoice is safe: hacked mailboxes pass too.")
+
     # 3. Who sent it
     vendor = match_vendor(vendors, fields.get("vendor_name"), email.get("from_name"))
     dom = _domain(email["from_email"])

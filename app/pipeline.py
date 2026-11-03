@@ -6,7 +6,7 @@
   4. model writes the case note; a human makes the payment decision
 """
 import base64, hashlib, json, os, pathlib, uuid
-import llm, policy, sandbox, store
+import llm, policy, sandbox, store, vault
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "data"
 RUNS = ROOT / "runs"
@@ -90,6 +90,25 @@ def _process(cid, email, att_dir, log):
         store.attack_verdict(cid, worst["decision"])
     store.update_case(cid, status="awaiting_human", risk=worst["risk"], decision=worst["decision"],
                       data={"results": results, "note": note["content"].strip()})
+    if vault.enabled():
+        try:
+            keys = []
+            flagged = worst["decision"] in ("quarantined", "hold")
+            for r in results:
+                raw = (att_dir / r["attachment"]).read_bytes()
+                keys.append(vault.put(f"cases/{cid}/{'quarantine' if flagged else 'original'}/{r['attachment']}" + (".quarantine" if flagged else ""), raw))
+                for pth in r["pages"]:
+                    keys.append(vault.put(f"cases/{cid}/screens/{pth.rsplit('/', 1)[1]}", (RUNS / cid / pth.rsplit('/', 1)[1]).read_bytes(), "image/png"))
+            c = store.get_case(cid)
+            keys.append(vault.put_json(f"cases/{cid}/evidence.json", {"case_id": cid, "email": email, "decision": worst["decision"],
+                                       "risk": worst["risk"], "note": note["content"].strip(),
+                                       "attachments": [{k: r.get(k) for k in ("attachment", "sha256", "sandbox_id", "findings")} for r in results],
+                                       "audit_log": c["events"]}))
+            store.update_case(cid, data={"vault": keys})
+            log("vault", f"Sealed {len(keys)} objects into the quarantine vault on Vultr Object Storage"
+                + (" (attachment renamed .quarantine)" if flagged else ""), {"bucket": vault.BUCKET, "host": vault.HOST, "keys": keys})
+        except Exception as e:
+            log("vault", f"Vault upload failed: {e.__class__.__name__}")
     log("decision", {"quarantined": "Payment BLOCKED and attachment quarantined. Security review required.",
                      "hold": "Payment ON HOLD until the vendor is verified by phone.",
                      "review": "Needs a human look before approval.",

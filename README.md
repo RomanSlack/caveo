@@ -76,10 +76,23 @@ fraud team or the auditors.
 - **Peak Freight**: an "invoice viewer" that grabs memory as fast as it can. On the VM the kernel's memory cgroup kills
   the whole gVisor sandbox at 768 MB; the host never notices. Quarantined.
 
+## A real inbox
+Email any invoice to the live inbox address shown in the app (a Resend inbound address). Caveo polls Resend's Receiving
+API every few seconds, downloads only PDF/HTML/image attachments (5 MB cap, rate-limited per sender), never opens them
+on the host, and runs them through the same sandbox. Resend's SPF/DKIM/DMARC verdicts become policy evidence: a DMARC
+failure is a HIGH finding; a full pass is noted but never trusted on its own, because hacked mailboxes pass too.
+
+## Activity
+The Activity view rolls up every case: money held back from attackers, sandboxes run, attacks blocked, injections
+caught, per-vendor risk, and a timeline that includes real inbound mail and visitors' crafted attacks.
+
 ## Vultr services used
 - **Vultr Cloud Compute** (vc2-6c-16gb, Los Angeles): runs the FastAPI backend, the agent pipeline, the policy engine,
   and every Docker/gVisor sandbox. It is the control plane: it dispatches each attachment to a fresh sandbox and
   collects verifiable output.
+- **Vultr Object Storage** (Standard tier, `sjc1.vultrobjects.com`): the quarantine vault. After every case Caveo seals
+  the original attachment (renamed `.quarantine` when flagged), the sandbox screenshots, and the evidence pack into a
+  private bucket. Evidence packs carry 1-hour signed links for auditors.
 - **Vultr Serverless Inference** (OpenAI-compatible): `qwen3.8-27b` reads invoice images natively, `glm-5.3` writes the case
   note and powers the red-team baseline, with automatic retries and a fallback model (`mimo-v2.6-flash`) if a model is down.
 

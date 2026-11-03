@@ -114,6 +114,7 @@ function renderInbox() {
     const t = new Date(e.received_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     return `<li style="--i:${firstInbox ? i : 0}"><button class="mail" type="button" data-id="${esc(e.id)}" aria-current="${state.selected === e.id}">
       <div class="from"><span>${esc(e.from_name)}</span>${lab ? `<span class="tag ${esc(lab)}">${esc(LABEL[lab] || lab)}</span>` : ""}</div>
+      ${e.inbound ? `<span class="tag inbound">real email</span>` : ""}
       <div class="addr">${esc(e.from_email)}</div>
       <div class="subj">${esc(e.subject)}</div>
       <div class="meta"><span>${esc(t)} · ${e.attachments.length} attachment${e.attachments.length > 1 ? "s" : ""}</span>
@@ -561,3 +562,61 @@ async function tour() {
   } catch (e) { /* tour ended early */ } finally { touring = false; }
 }
 if (location.hash === "#tour") setTimeout(tour, 800);
+
+
+/* ---------------- live inbox (Resend) ---------------- */
+let knownInbound = new Set();
+async function loadConfig() {
+  try {
+    const cfg = await api("/api/config");
+    if (cfg.inbound_address) {
+      $("#live-inbox").hidden = false;
+      const a = $("#inbound-addr"); a.textContent = cfg.inbound_address; a.href = "mailto:" + cfg.inbound_address;
+    }
+  } catch (e) { /* config is optional */ }
+}
+// clicking the address copies it (never opens a mail app)
+$("#inbound-addr").addEventListener("click", async (ev) => {
+  ev.preventDefault();
+  try { await navigator.clipboard.writeText(ev.currentTarget.textContent); } catch (e) {
+    const r = document.createRange(); r.selectNodeContents(ev.currentTarget); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand("copy");
+  }
+  $("#copied").textContent = "Copied"; sfx.pop(); setTimeout(() => { $("#copied").textContent = ""; }, 1600);
+});
+// a real email just landed: chime, and open it (unless the tour is running)
+let inboundPrimed = false;
+setInterval(() => {
+  const ids = state.inbox.filter((e) => e.inbound).map((e) => e.id);
+  const fresh = ids.filter((id) => !knownInbound.has(id));
+  ids.forEach((id) => knownInbound.add(id));
+  if (inboundPrimed && fresh.length && !touring) { sfx.chime(); select(fresh[0]); }
+  inboundPrimed = true;
+}, 2000);
+loadConfig();
+
+/* ---------------- activity view ---------------- */
+const money0 = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const ago = (t) => { const s = Math.max(0, Date.now() / 1000 - t); return s < 60 ? Math.round(s) + "s ago" : s < 3600 ? Math.round(s / 60) + "m ago" : Math.round(s / 3600) + "h ago"; };
+async function showActivity() {
+  state.selected = null; state.caseData = null; renderInbox(); resetChamber();
+  const a = await api("/api/activity");
+  const kp = [
+    ["hero", money0(a.protected), "held back from going to attackers"],
+    ["", a.destroyed, "sandboxes run and destroyed"], ["", a.blocked, "attack attempts blocked"],
+    ["", a.injections, "AI injections caught"], ["", `${a.attacks_slipped}/${a.attacks_tried}`, "visitor attacks that got paid"],
+  ].map(([c, v, l], i) => `<div class="kpi ${c}" style="--i:${i}"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join("");
+  const vend = a.vendors.length ? `<div class="vend-wrap"><table class="vend"><thead><tr><th>Vendor</th><th class="n">Invoices</th><th class="n">Flagged</th><th>Risk</th><th class="n">At risk</th></tr></thead><tbody>${a.vendors.map((v) => {
+      const low = v.risk < 50, word = v.risk === 0 ? "✓ clean" : low ? "▲ watch" : "✋ high risk";
+      return `<tr><td>${esc(v.vendor)}</td><td class="n">${v.invoices}</td><td class="n">${v.flagged}</td>
+        <td><div class="meter" title="${esc(v.vendor)}: ${v.flagged} of ${v.invoices} invoices flagged (${v.risk}%)"><div class="track"><div class="fill ${low ? "low" : ""}" style="width:${Math.max(v.risk, 3)}%"></div></div><span class="lbl">${word} ${v.risk}%</span></div></td>
+        <td class="n">${money0(v.at_risk)}</td></tr>`; }).join("")}</tbody></table></div>` : `<p class="empty-act">No invoices processed yet. Run the inbox or email one in.</p>`;
+  const tl = a.timeline.length ? `<ol class="tl">${a.timeline.map((x) => `<li data-email="${esc(x.email_id)}"><span class="when">${ago(x.t)}</span>
+      <span class="tag ${esc(x.decision)}">${esc(LABEL[x.decision] || x.decision)}</span>
+      <span class="what">${esc(x.subject)}<small>${esc(x.from)}${x.inbound ? " · real email" : x.crafted ? " · crafted attack" : ""}</small></span>
+      <span class="amt">${x.total ? money0(x.total) : ""}</span></li>`).join("")}</ol>` : "";
+  $("#case").innerHTML = `<div class="act"><h1>Activity</h1><p class="sub">Everything Caveo has opened, across every inbox, live from this Vultr server.</p>
+    <div class="kpis">${kp}</div><h2>Vendor risk</h2>${vend}${tl ? `<h2>Recent cases</h2>${tl}` : ""}</div>`;
+  $("#case").scrollTop = 0;
+  document.querySelectorAll("ol.tl li").forEach((li) => li.addEventListener("click", () => select(li.dataset.email)));
+}
+$("#btn-activity").addEventListener("click", showActivity);
