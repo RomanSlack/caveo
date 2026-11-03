@@ -1,5 +1,5 @@
 """Caveo web app: inbox, cases, audit log, human approval."""
-import json, pathlib, re, subprocess, threading, time, uuid
+import json, os, pathlib, re, subprocess, threading, time, uuid
 from collections import defaultdict, deque
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
@@ -12,7 +12,7 @@ DATA = ROOT / "data"
 UPLOADS = DATA / "uploads"
 ALLOWED = {".pdf", ".html", ".htm", ".png", ".jpg", ".jpeg"}
 MAX_BYTES = 5 * 1024 * 1024
-_sem = threading.BoundedSemaphore(3)  # at most 3 sandboxes at once on one VM
+_sem = threading.BoundedSemaphore(int(os.environ.get("CAVEO_MAX_SANDBOXES", "5")))  # 6 vCPU VM: 5 sandboxes + the app
 
 app = FastAPI(title="Caveo")
 store.init()

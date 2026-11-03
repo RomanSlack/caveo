@@ -86,7 +86,7 @@ pre.arch em{font-style:normal;color:var(--signal)}pre.arch b{color:oklch(0.85 0.
   <div style="margin-top:auto">
   <ol class="steps">
     <li class="sig"><b>Detonate</b><span>Each attachment opens in its own gVisor sandbox: no network, no secrets. A real Chromium and PDF parser run inside, and every move is recorded.</span></li>
-    <li><b>Read</b><span>A vision model on Vultr Serverless Inference reads the sandbox's screenshots. The document is treated as untrusted data.</span></li>
+    <li><b>Read</b><span>qwen3.8-27b on Vultr Serverless Inference reads the sandbox's screenshots. The document is treated as untrusted data.</span></li>
     <li><b>Check</b><span>Deterministic rules check sender domain, lookalikes, bank vs vendor master, PO, hidden text and behavior.</span></li>
     <li><b>Decide</b><span>A person approves. Quarantined cases can't be paid, and bank changes need a callback to the number on file.</span></li>
   </ol></div>
@@ -136,19 +136,32 @@ pre.arch em{font-style:normal;color:var(--signal)}pre.arch b{color:oklch(0.85 0.
   <div class="foot"><span>Caveo</span><span>06</span></div>
 </section>
 
+<!-- 6b red team -->
+<section class="s">
+  <div class="k">Red team · scripts/redteam.py</div>
+  <h2>We tried 11 ways to talk the AI into paying. None worked.</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:48px;margin-top:70px">
+    <div><div class="big" style="font-size:170px;color:var(--fg)">1/12</div><p class="lead" style="font-size:30px;margin-top:18px">frauds a naive AI approver paid, on the same Vultr model. The fake "verification JSON" fooled it.</p></div>
+    <div><div class="big" style="font-size:170px;color:var(--pass)">0/12</div><p class="lead" style="font-size:30px;margin-top:18px">frauds Caveo let through. The bank-account rule can't be argued with.</p></div>
+    <div><div class="big" style="font-size:170px">11/11</div><p class="lead" style="font-size:30px;margin-top:18px">hidden instructions Caveo flagged: white text, off-page, under a box, metadata, Spanish, email body and more.</p></div>
+  </div>
+  <p class="lead" style="font-size:28px;margin-top:auto;margin-bottom:60px">The red team found two real gaps in our own detector (text under a white box, text off the page). We fixed both, and you can rerun it from the repo.</p>
+  <div class="foot"><span>Caveo</span><span>07</span></div>
+</section>
+
 <!-- 7 architecture -->
 <section class="s dark">
   <div class="k">Architecture · all on Vultr</div>
   <h2>Vultr is the control plane, not just hosting.</h2>
-<pre class="arch">browser ──HTTPS──▶ Caddy ──▶ FastAPI agent          <b>Vultr Cloud Compute · vc2-2c-4gb · LAX</b>
+<pre class="arch">browser ──HTTPS──▶ Caddy ──▶ FastAPI agent          <b>Vultr Cloud Compute · vc2-6c-16gb · LAX</b>
                                │
                                ├─▶ sandbox.py ──docker run --runtime runsc --network none──▶ <em>[ throwaway sandbox ]</em>
                                │                 one per attachment, destroyed after       Chromium · PyMuPDF
                                │                 ◀── JSON report + screenshots (stdout only)
-                               ├─▶ llm.py ──▶ <b>Vultr Serverless Inference · glm-5.3 (vision)</b>
+                               ├─▶ llm.py ──▶ <b>Vultr Serverless Inference · qwen3.8-27b vision · glm-5.3</b>
                                ├─▶ policy.py   deterministic verdict, which the model can't override
                                └─▶ store.py    cases + append-only audit log</pre>
-  <div class="foot"><span>Caveo</span><span>07</span></div>
+  <div class="foot"><span>Caveo</span><span>08</span></div>
 </section>
 
 <!-- 8 business -->
@@ -160,7 +173,7 @@ pre.arch em{font-style:normal;color:var(--signal)}pre.arch b{color:oklch(0.85 0.
     <div><h3>Why now</h3><p>AP automation tools are adding LLMs that read invoices. Every one of them can be prompt-injected. Caveo is the containment layer in front of them.</p></div>
     <div><h3>What's next</h3><p>Gmail and Microsoft 365 inbox connectors · NetSuite and QuickBooks vendor master sync · automated callback verification · per-vendor behavior baselines.</p></div>
   </div>
-  <div class="foot"><span>Caveo</span><span>08</span></div>
+  <div class="foot"><span>Caveo</span><span>09</span></div>
 </section>
 
 <!-- 9 close -->
@@ -169,6 +182,7 @@ pre.arch em{font-style:normal;color:var(--signal)}pre.arch b{color:oklch(0.85 0.
   <div style="margin-top:auto">
     <h1>Every invoice is guilty until the sandbox says otherwise.</h1>
     <p class="lead" style="font-size:36px;margin-top:40px;color:var(--chf)">Try it: <span class="mono">caveo-144-202-120-235.sslip.io</span></p>
+    <p class="lead" style="font-size:30px;margin-top:12px">Hit "Craft an attack" and try to get a fake invoice paid.</p>
     <p class="lead" style="font-size:30px;margin-top:12px">Code: <span class="mono">github.com/RomanSlack/caveo</span> · MIT</p>
   </div>
   <div style="height:110px"></div>

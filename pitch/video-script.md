@@ -1,4 +1,4 @@
-# Caveo demo video (target 2:45)
+# Caveo demo video (target 3:00)
 
 Record at 1440x900, browser zoom 100%, on https://caveo-144-202-120-235.sslip.io.
 Before recording: press **Reset demo**. Keep the mouse slow. Pause one beat after every stamp.
@@ -18,8 +18,10 @@ Before recording: press **Reset demo**. Keep the mouse slow. Pause one beat afte
 | 1:50 | Click **Summit Office Co**, run it. Keep your eyes on the Chamber. | "Last one. A 'secure invoice viewer' attachment. Watch the chamber." |
 | 1:58 | BLOCKED rows stack up in the Chamber (CONTAINMENT MOMENT, let it play) | "The moment it opens, it reaches for the cookies, grabs a login token, and tries to send them out three different ways. Then it loads a second-stage script and tries to redirect to a fake Microsoft login. Blocked. Blocked. Blocked." |
 | 2:15 | "Sandbox destroyed" seal appears. Point at the top bar: 0 secrets exposed. | "Then the sandbox is destroyed. Nothing persisted, zero secrets exposed, and the attacker got an empty room." |
-| 2:25 | Deck slide 7, architecture | "It all runs on Vultr: Cloud Compute is the control plane that dispatches every attachment to a fresh gVisor sandbox, and Serverless Inference reads the evidence." |
-| 2:35 | Deck slide 9 | "Caveo. Every invoice is guilty until the sandbox says otherwise. It's live now, and the code is on GitHub." |
+| 2:22 | Click **Craft an attack**: Brightline, real domain (hacked mailbox), new bank, "Text under a white box". Build it and send. | "Don't take our word for it. Judges can build their own fake invoice: impersonate a vendor, hide an instruction for the AI anywhere they like. Same sandbox, same rules. Quarantined." |
+| 2:35 | Deck slide 7, red team | "We red-teamed it with eleven hiding spots. A naive AI approver on the same model paid one of them. Caveo paid none." |
+| 2:42 | Deck slide 8, architecture | "It all runs on Vultr: Cloud Compute is the control plane that dispatches every attachment to a fresh gVisor sandbox, and Serverless Inference reads the evidence." |
+| 2:52 | Deck slide 10 | "Caveo. Every invoice is guilty until the sandbox says otherwise. It's live now, and the code is on GitHub." |
 
 ## Required beats (Challenge 1 checklist)
 - [x] Containment moment shown: Summit BLOCKED rows + "Sandbox destroyed" seal (1:58 to 2:20)
