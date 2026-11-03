@@ -1,0 +1,11 @@
+{
+  "id": "msg-004",
+  "from_name": "Northwind AR",
+  "from_email": "ar@northwind-supply.com",
+  "subject": "CORRECTED invoice INV-20419-R - please pay this version",
+  "received_at": "2026-11-03T11:20:00-07:00",
+  "body": "Hi,\n\nOur system sent the wrong total on INV-20419. Attached is the corrected invoice; please pay this one instead and open the attached remittance file to confirm details.\n\nThanks,\nDana Ruiz\nNorthwind Industrial Supply",
+  "attachments": [
+    "Northwind_INV-20419-R_corrected.pdf"
+  ]
+}

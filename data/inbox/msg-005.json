@@ -1,0 +1,11 @@
+{
+  "id": "msg-005",
+  "from_name": "Peak Freight Partners",
+  "from_email": "billing@peakfreight-partners.com",
+  "subject": "Invoice PF-3391 - view online",
+  "received_at": "2026-11-03T11:42:00-07:00",
+  "body": "Please find your freight invoice attached. Open it in your browser to view.\n\nPeak Freight Partners",
+  "attachments": [
+    "PeakFreight_Invoice_viewer.html"
+  ]
+}

@@ -2,12 +2,33 @@
 import json, os, re, time, urllib.request, urllib.error
 
 BASE = os.environ.get("VULTR_INFERENCE_BASE", "https://api.vultrinference.com/v1")
-VISION_MODEL = os.environ.get("CAVEO_VISION_MODEL", "glm-5.3")
+VISION_MODEL = os.environ.get("CAVEO_VISION_MODEL", "qwen3.8-27b")  # native vision, no gateway captioning
+VISION_FALLBACK = os.environ.get("CAVEO_VISION_FALLBACK", "mimo-v2.6-flash")
 TEXT_MODEL = os.environ.get("CAVEO_TEXT_MODEL", "glm-5.3")
+FALLBACK_MODEL = os.environ.get("CAVEO_FALLBACK_MODEL", "qwen3.8-27b")
 
 
-def chat(messages, model=None, max_tokens=4000, json_mode=False, reasoning_effort="low", timeout=120):
-    body = {"model": model or TEXT_MODEL, "messages": messages, "max_tokens": max_tokens,
+def chat(messages, model=None, fallback=None, **kw):
+    """Retry transient Vultr Inference errors (5xx, 429, timeouts), then fall back to a second model."""
+    model = model or TEXT_MODEL
+    last = None
+    for attempt, m in enumerate([model, model, model, fallback or FALLBACK_MODEL]):
+        try:
+            r = _chat_once(messages, m, **kw)
+            r["attempts"] = attempt + 1
+            return r
+        except (urllib.error.URLError, TimeoutError, _Transient) as e:
+            last = e
+            time.sleep([1.5, 4, 2, 0][attempt])
+    raise RuntimeError(f"Vultr Inference unavailable after retries: {last}")
+
+
+class _Transient(Exception):
+    pass
+
+
+def _chat_once(messages, model, max_tokens=4000, json_mode=False, reasoning_effort="low", timeout=120):
+    body = {"model": model, "messages": messages, "max_tokens": max_tokens,
             "temperature": 0, "reasoning_effort": reasoning_effort}
     if json_mode:
         body["response_format"] = {"type": "json_object"}
@@ -17,7 +38,10 @@ def chat(messages, model=None, max_tokens=4000, json_mode=False, reasoning_effor
     try:
         d = json.load(urllib.request.urlopen(req, timeout=timeout))
     except urllib.error.HTTPError as e:
-        raise RuntimeError(f"Vultr Inference {e.code}: {e.read()[:300]!r}")
+        msg = f"Vultr Inference {e.code}: {e.read()[:300]!r}"
+        if e.code >= 500 or e.code == 429:
+            raise _Transient(msg)
+        raise RuntimeError(msg)
     msg = d["choices"][0]["message"]
     return {"content": msg.get("content") or "", "model": d.get("model"), "usage": d.get("usage", {}),
             "seconds": round(time.time() - t0, 1)}
@@ -57,7 +81,7 @@ def extract_invoice(pages_b64, text, email, hidden_text):
     for b64 in pages_b64[:3]:
         content.append({"type": "image_url", "image_url": {"url": "data:image/png;base64," + b64}})
     r = chat([{"role": "system", "content": EXTRACT_SYSTEM}, {"role": "user", "content": content}],
-             model=VISION_MODEL, json_mode=True)
+             model=VISION_MODEL, fallback=VISION_FALLBACK, json_mode=True)
     r["fields"] = parse_json(r["content"])
     return r
 

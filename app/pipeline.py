@@ -33,6 +33,9 @@ def process(cid, email, att_dir):
 
 def _process(cid, email, att_dir, log):
     vendors, pos = load_json("vendors.json"), load_json("purchase_orders.json")
+    history = [{"case_id": c["id"], "status": c["status"], **{k: r["fields"].get(k) for k in ("po_number", "invoice_number", "total")}}
+               for c in store.list_cases() if c["id"] != cid and c["decision"] in ("ready", "review", "hold")
+               and c["status"] in ("awaiting_human", "approved") for r in c["data"].get("results", [])]
     log("intake", f"Email from {email['from_name']} <{email['from_email']}>: \"{email['subject']}\"",
         {"attachments": email["attachments"]})
     out_dir = RUNS / cid
@@ -67,7 +70,7 @@ def _process(cid, email, att_dir, log):
             ex = llm.extract_invoice(rep.get("pages", []), rep.get("text", ""), email, rep.get("hidden_text", []))
             fields = ex["fields"]
             log("model", f"Extracted fields with {ex['model']} in {ex['seconds']}s", {"fields": fields, "usage": ex["usage"]})
-        verdict = policy.evaluate(email, sb, fields, vendors, pos)
+        verdict = policy.evaluate(email, sb, fields, vendors, pos, history)
         for f in verdict["findings"]:
             log("policy", f"[{f['severity'].upper()}] {f['title']}", f)
         slim = {k: v for k, v in rep.items() if k != "pages"}

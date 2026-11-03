@@ -78,6 +78,12 @@ def analyze_pdf(path):
             report["pages"].append(base64.b64encode(png).decode())
     report["text"] = "\n".join(texts)[:20000]
     report["page_count"] = len(doc)
+    try:
+        report["embedded_files"] = [{"name": n, "size": doc.embfile_info(n).get("size")} for n in doc.embfile_names()]
+    except Exception:
+        report["embedded_files"] = []
+    js = re.findall(rb"/JS\s*\((.{0,400}?)\)\s*>>", raw, re.S)
+    report["pdf_scripts"] = [j.decode("latin-1").replace("\\(", "(").replace("\\)", ")") for j in js][:5]
 
 
 INIT_HOOKS = r"""
@@ -123,6 +129,8 @@ def analyze_html(path):
         ctx.route("**/*", route)
         page = ctx.new_page()
         page.on("console", lambda m: report["behaviors"].append({"kind": "console", "detail": m.text[:300]}))
+        page.on("crash", lambda: report["behaviors"].append({"kind": "renderer_crash",
+                                                             "detail": "page process died while allocating memory"}))
         try:
             page.goto(own_url, wait_until="load", timeout=10000)
         except Exception as e:
@@ -136,7 +144,10 @@ def analyze_html(path):
         except Exception as e:
             report["errors"].append(f"inspect: {e.__class__.__name__}")
         report["final_url"] = page.url
-        report["pages"].append(base64.b64encode(page.screenshot(full_page=True)).decode())
+        try:
+            report["pages"].append(base64.b64encode(page.screenshot(full_page=True, timeout=8000)).decode())
+        except Exception as e:
+            report["errors"].append(f"screenshot: {e.__class__.__name__}")
         browser.close()
 
 

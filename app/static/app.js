@@ -122,7 +122,7 @@ function renderCase(c) {
     $("#case").innerHTML = html;
     return;
   }
-  if (c.data.note) html += `<div class="note"><p>${esc(c.data.note)}</p><span class="by">Case note · glm-5.3 on Vultr Serverless Inference · cannot change the verdict</span></div>`;
+  if (c.data.note) html += `<div class="note"><p>${esc(c.data.note)}</p><span class="by">Read by qwen3.8-27b · note by glm-5.3 · Vultr Serverless Inference · cannot change the verdict</span></div>`;
   for (const r of results) html += renderEvidence(r, e);
   html += renderDecision(c, results);
   $("#case").innerHTML = html;

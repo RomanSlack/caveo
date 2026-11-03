@@ -2,6 +2,7 @@
 An attacker can talk to the model, but cannot talk to this file."""
 import difflib, re
 
+LIMIT_NOTE = "768 MB RAM, no swap, 1 CPU, 45 s"
 SEV_ORDER = {"pass": 0, "info": 1, "medium": 2, "high": 3, "critical": 4}
 DECISION = {4: "quarantined", 3: "hold", 2: "review", 1: "ready", 0: "ready"}
 INJECTION_RE = re.compile(r"(ignore (all|any|previous)|system note|ai (assistant|accounts)|assistant:|do not (flag|escalate|mention)|"
@@ -32,7 +33,7 @@ def match_vendor(vendors, *names):
     return best if score >= 0.6 else None
 
 
-def evaluate(email, sandbox, fields, vendors, pos):
+def evaluate(email, sandbox, fields, vendors, pos, history=()):
     out = []
     rep = (sandbox or {}).get("report") or {}
 
@@ -60,7 +61,16 @@ def evaluate(email, sandbox, fields, vendors, pos):
            "The file's script reached for cookies, saved tokens or the clipboard.", [f"{b['kind']}: {b['detail']}" for b in snoop][:8])
     if rep.get("active_content"):
         _f(out, "critical", "active_pdf", "PDF contains executable content",
-           "Invoices do not need scripts or auto-run actions.", rep["active_content"])
+           "Invoices do not need scripts or auto-run actions. The sandbox parsed it without ever running it.",
+           rep["active_content"] + [f"script: {j[:160]}" for j in rep.get("pdf_scripts", [])])
+    if rep.get("embedded_files"):
+        _f(out, "critical", "embedded_file", "PDF carries hidden embedded files",
+           "A file is packed inside the PDF, a common way to smuggle malware past email filters.",
+           [f"{e['name']} ({e.get('size')} bytes)" for e in rep["embedded_files"]])
+    if any(b["kind"] == "renderer_crash" for b in rep.get("behaviors", [])) or "memory" in str((sandbox or {}).get("status", "")):
+        _f(out, "critical", "resource_exhaustion", "Attachment tried to exhaust the machine",
+           "Opening it grabbed memory until its process died inside the sandbox. On a normal laptop or server this freezes the machine.",
+           [f"limit: {LIMIT_NOTE}"])
 
     # 2. Hidden text and prompt injection aimed at AI reviewers
     hidden = rep.get("hidden_text", [])
@@ -120,6 +130,13 @@ def evaluate(email, sandbox, fields, vendors, pos):
                 _f(out, "pass", "po_amount_ok", f"Amount matches {po['po']}", f"${total:,.2f} vs PO ${po['amount']:,.2f}.")
             else:
                 _f(out, "medium", "po_amount_mismatch", f"Amount differs from {po['po']}", f"${total:,.2f} vs PO ${po['amount']:,.2f}.")
+
+        dupes = [h for h in history if h.get("po_number") == po["po"]]
+        if dupes:
+            d = dupes[0]
+            _f(out, "high", "duplicate_invoice", f"{po['po']} was already invoiced",
+               f"Invoice {d.get('invoice_number')} for {po['po']} is already in the system ({d.get('status')}). Paying twice is the most common AP loss.",
+               [f"{h.get('invoice_number')} · ${h.get('total') or 0:,.2f} · {h.get('status')} · {h.get('case_id')}" for h in dupes][:4])
 
     # 6. Social-engineering pressure
     blob = " ".join([email.get("subject", ""), email.get("body", ""), str(fields.get("urgency_language") or ""),
