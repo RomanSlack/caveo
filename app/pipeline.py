@@ -67,7 +67,8 @@ def _process(cid, email, att_dir, log):
         fields = {}
         if rep.get("pages") or rep.get("text"):
             log("model", f"Vision model reading {att} (screenshots from the sandbox, treated as untrusted data)")
-            ex = llm.extract_invoice(rep.get("pages", []), rep.get("text", ""), email, rep.get("hidden_text", []))
+            text = rep.get("text", "") + ("\n\nPDF METADATA (untrusted): " + json.dumps(rep["metadata"]) if rep.get("metadata") else "")
+            ex = llm.extract_invoice(rep.get("pages", []), text, email, rep.get("hidden_text", []))
             fields = ex["fields"]
             log("model", f"Extracted fields with {ex['model']} in {ex['seconds']}s", {"fields": fields, "usage": ex["usage"]})
         verdict = policy.evaluate(email, sb, fields, vendors, pos, history)

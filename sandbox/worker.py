@@ -53,7 +53,7 @@ def analyze_pdf(path):
         rect = page.rect
         dark_fills = [d["rect"] for d in page.get_drawings()
                       if d.get("fill") and min(d["fill"][:3]) < 0.85]
-        for block in page.get_text("dict")["blocks"]:
+        for block in page.get_text("dict", clip=fitz.INFINITE_RECT())["blocks"]:  # include text outside the page
             for line in block.get("lines", []):
                 for span in line["spans"]:
                     t = span["text"].strip()
@@ -73,11 +73,26 @@ def analyze_pdf(path):
                     if why:
                         report["hidden_text"].append({"page": i + 1, "text": t, "why": why, "bbox": [round(v, 1) for v in span["bbox"]],
                                                        "page_size": [rect.width, rect.height]})
+        # text painted over by a later shape (drawn after the text, so it sits on top)
+        try:
+            fills = [(d["seqno"], d["rect"]) for d in page.get_drawings() if d.get("fill")]
+            for tr in page.get_texttrace():
+                txt = "".join(chr(c[0]) for c in tr["chars"]).strip()
+                if len(txt) < 3:
+                    continue
+                bb = fitz.Rect(tr["bbox"])
+                if any(seq > tr["seqno"] and fr.contains(bb.tl + (1, 1)) and fr.contains(bb.br - (1, 1)) for seq, fr in fills):
+                    if not any(h["text"] == txt for h in report["hidden_text"]):
+                        report["hidden_text"].append({"page": i + 1, "text": txt[:300], "why": ["covered by a shape"],
+                                                      "bbox": [round(v, 1) for v in bb], "page_size": [rect.width, rect.height]})
+        except Exception as e:
+            report["errors"].append(f"cover-check: {e.__class__.__name__}")
         if i < MAX_PAGES:
             png = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5)).tobytes("png")
             report["pages"].append(base64.b64encode(png).decode())
     report["text"] = "\n".join(texts)[:20000]
     report["page_count"] = len(doc)
+    report["metadata"] = {k: v[:500] for k, v in (doc.metadata or {}).items() if isinstance(v, str) and v.strip()}
     try:
         report["embedded_files"] = [{"name": n, "size": doc.embfile_info(n).get("size")} for n in doc.embfile_names()]
     except Exception:

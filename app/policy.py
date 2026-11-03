@@ -78,6 +78,7 @@ def evaluate(email, sandbox, fields, vendors, pos, history=()):
         _f(out, "high", "hidden_text", f"{len(hidden)} line(s) of text hidden from human eyes",
            "Text a person cannot see but software can read.", [f"p{h['page']} ({', '.join(h['why'])}): {h['text']}" for h in hidden][:8])
     inj = [h["text"] for h in hidden if INJECTION_RE.search(h["text"])]
+    inj += [f"PDF metadata {k}: {v}" for k, v in (rep.get("metadata") or {}).items() if INJECTION_RE.search(v)]
     inj += [s for s in (fields.get("embedded_instructions") or [])
             if s and not any(h in s or s in h for h in inj) and re.search(r"\b(ai|assistant|system|model|llm|automated|bot)\b", s, re.I)]
     if inj or INJECTION_RE.search(rep.get("text", "")):
