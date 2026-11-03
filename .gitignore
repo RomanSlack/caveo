@@ -5,3 +5,5 @@ data/runs/
 data/jobs/
 data/uploads/
 research/
+pitch/video/
+pitch/*.mp4

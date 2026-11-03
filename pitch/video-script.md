@@ -1,4 +1,10 @@
-# Caveo demo video (target 3:00)
+# Caveo demo video
+
+**A finished draft is produced automatically:** `python scripts/make_video.py` resets the live demo, records the real site
+running the guided tour plus a crafted attack, voices it with Vultr Serverless Inference TTS (qwen3-tts, voice "ryan"),
+and writes `pitch/Caveo-demo.mp4` (about 2:50, 1080p). The lines live in `LINES` in that script.
+To record it in your own voice instead, follow the table below (target 3:00).
+
 
 Record at 1440x900, browser zoom 100%, on https://caveo-144-202-120-235.sslip.io.
 Before recording: press **Reset demo**. Keep the mouse slow. Pause one beat after every stamp.
