@@ -1,0 +1,11 @@
+{
+  "prompt": "Flat top-down photograph of plain corrugated kraft cardboard surface, warm light brown, subtle fibers and tiny speckles, soft even studio lighting, no objects, no text, no shadows, uniform texture filling the whole frame, high detail macro texture for a website background",
+  "model": "gpt-image-2",
+  "provider": "openai",
+  "size": "1536x1024",
+  "quality": "medium",
+  "transparent": false,
+  "refs": [],
+  "filename": "kraft_0.png",
+  "generated_at": "2026-11-03T12:12:30"
+}

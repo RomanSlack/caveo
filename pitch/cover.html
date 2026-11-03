@@ -1,58 +1,65 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Caveo deck</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:oklch(0.975 0.004 170);--fg:oklch(0.24 0.03 170);--muted:oklch(0.50 0.02 170);--border:oklch(0.86 0.01 170);
---brand:oklch(0.36 0.06 170);--signal:oklch(0.60 0.20 33);--signal-ink:oklch(0.50 0.17 33);--pass:oklch(0.50 0.10 155);
---ch:oklch(0.19 0.02 170);--chl:oklch(0.27 0.025 170);--chf:oklch(0.92 0.01 170);--chm:oklch(0.65 0.02 170)}
+:root{--paper:oklch(0.985 0.012 85);--paper2:oklch(0.965 0.018 82);--ink:oklch(0.27 0.03 60);--muted:oklch(0.46 0.03 60);--stitch:oklch(0.62 0.06 65 / .55);--line:oklch(0.88 0.02 75);
+--green:oklch(0.52 0.11 155);--red:oklch(0.60 0.20 28);--red-ink:oklch(0.48 0.17 28);--sun:oklch(0.86 0.15 88);--felt:oklch(0.25 0.025 220);--feltfg:oklch(0.93 0.015 85);--feltm:oklch(0.72 0.02 200);
+--fd:"Fredoka",sans-serif;--fu:"Figtree",sans-serif;--fm:"JetBrains Mono",monospace}
 @page{size:1920px 1080px;margin:0}
-*{box-sizing:border-box}body{margin:0;font-family:"Schibsted Grotesk",sans-serif;color:var(--fg);background:#888}
-.s{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--bg);padding:110px 130px;page-break-after:always;display:flex;flex-direction:column}
-.s.dark{background:var(--ch);color:var(--chf);background-image:linear-gradient(var(--chl) 1px,transparent 1px),linear-gradient(90deg,var(--chl) 1px,transparent 1px);background-size:48px 48px}
-.k{font:600 22px/1 "IBM Plex Mono";letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;gap:18px;align-items:center}
-.dark .k{color:var(--chm)}
-.k b{color:var(--signal)}
-h1{font-size:132px;line-height:.95;letter-spacing:-.035em;font-weight:800;margin:0}
-h2{font-size:80px;line-height:1.02;letter-spacing:-.03em;font-weight:800;margin:28px 0 0;max-width:1500px}
-p.lead{font-size:38px;line-height:1.35;color:var(--muted);max-width:1300px;margin:36px 0 0}
-.dark p.lead{color:var(--chm)}
-.mono{font-family:"IBM Plex Mono"}
-.foot{position:absolute;left:130px;right:130px;bottom:56px;display:flex;justify-content:space-between;font:500 20px "IBM Plex Mono";color:var(--muted)}
-.dark .foot{color:var(--chm)}
-.mark{display:inline-grid;place-items:center;width:64px;height:64px;border:5px solid var(--brand);border-radius:8px}
-.mark i{width:22px;height:22px;background:var(--signal);border-radius:3px}
-.dark .mark{border-color:var(--chf)}
-.stamp{display:inline-block;font:800 64px/1 "Schibsted Grotesk";letter-spacing:.08em;color:var(--signal);border:7px solid var(--signal);border-radius:10px;padding:18px 30px;transform:rotate(-3deg)}
+*{box-sizing:border-box}body{margin:0;font-family:var(--fu);color:var(--ink);background:#888}
+.s{width:1920px;height:1080px;position:relative;overflow:hidden;page-break-after:always;display:flex;flex-direction:column;padding:120px 150px;
+ background:oklch(0.74 0.075 70) url(../app/static/img/kraft.webp) center/1400px auto}
+.s::before{content:"";position:absolute;inset:44px;border-radius:44px;background:var(--paper);box-shadow:0 2px 4px oklch(.3 .05 60/.2),0 40px 80px -30px oklch(.3 .06 60/.6);z-index:0}
+.s::after{content:"";position:absolute;inset:60px;border-radius:32px;border:4px dashed var(--stitch);z-index:0;pointer-events:none}
+.s>*{position:relative;z-index:1}
+.s.dark{color:var(--feltfg);background:var(--felt) url(../app/static/img/felt.webp) center/1400px auto}
+.s.dark::before{background:transparent;box-shadow:none;inset:0;border-radius:0;
+ background:repeating-linear-gradient(-45deg,var(--sun) 0 36px,oklch(.22 .02 60) 36px 72px) top/100% 34px no-repeat}
+.s.dark::after{border-color:oklch(1 0 0 / .14);inset:70px 44px 44px}
+.k{font:600 26px/1 var(--fd);letter-spacing:.02em;color:var(--muted);display:flex;gap:18px;align-items:center}
+.dark .k{color:var(--feltm)}
+h1{font:700 150px/.95 var(--fd);letter-spacing:-.02em;margin:0}
+h2{font:700 84px/1.02 var(--fd);letter-spacing:-.015em;margin:28px 0 0;max-width:1500px}
+p.lead{font-size:38px;line-height:1.38;color:var(--muted);max-width:1300px;margin:36px 0 0}
+.dark p.lead{color:var(--feltm)}
+.mono{font-family:var(--fm)}
+.foot{position:absolute;left:150px;right:150px;bottom:84px;display:flex;justify-content:space-between;font:600 22px var(--fd);color:var(--muted)}
+.dark .foot{color:var(--feltm)}
+.mark{display:inline-block;width:110px;height:110px;background:url(../app/static/img/latch-calm.webp) center/contain no-repeat}
+.mark i{display:none}
+.stamp{display:inline-block;font:700 64px/1 var(--fd);letter-spacing:.06em;color:white;background:var(--red);border-radius:22px;padding:22px 34px 18px;box-shadow:0 0 0 9px white,0 24px 40px -12px oklch(.3 .06 60/.6);transform:rotate(-4deg)}
 .row{display:grid;gap:56px;margin-top:64px;flex:1;min-height:0}
-.shot{border:2px solid var(--border);border-radius:12px;overflow:hidden;background:white}
+.shot{border-radius:18px;overflow:hidden;background:white;align-self:start;box-shadow:0 0 0 8px white,0 30px 60px -20px oklch(.3 .06 60/.6);transform:rotate(-1deg)}
 .shot img{display:block;width:100%}
-.big{font:800 220px/0.9 "Schibsted Grotesk";letter-spacing:-.04em;color:var(--signal)}
+.big{font:700 230px/.9 var(--fd);letter-spacing:-.03em;color:var(--red)}
 ol.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
-ol.steps li{border-top:6px solid var(--brand);padding-top:26px}
-ol.steps li.sig{border-color:var(--signal)}
-ol.steps b{display:block;font-size:40px;letter-spacing:-.02em}
-ol.steps span{display:block;font-size:27px;line-height:1.4;color:var(--muted);margin-top:14px}
+ol.steps li{background:var(--paper2);border-radius:26px;padding:30px;box-shadow:0 0 0 2px var(--line) inset}
+ol.steps li.sig{background:oklch(0.95 .035 30);box-shadow:0 0 0 3px var(--red) inset}
+ol.steps b{display:block;font:700 44px var(--fd)}
+ol.steps span{display:block;font-size:26px;line-height:1.42;color:var(--muted);margin-top:14px}
 table{border-collapse:collapse;width:100%;font-size:30px}
-td{padding:20px 0;border-bottom:2px dashed var(--chl);vertical-align:top}
-td:first-child{width:430px;color:var(--chm);font:500 26px/1.5 "IBM Plex Mono";text-transform:uppercase;letter-spacing:.06em}
-td.v{color:oklch(0.85 0.09 155)}
-.blk{display:inline-block;font:600 22px "IBM Plex Mono";color:var(--signal);border:2px solid var(--signal);padding:4px 10px;border-radius:5px;margin-right:12px}
-.quote{font:500 30px/1.5 "IBM Plex Mono";background:oklch(0.50 0.17 33);color:white;padding:28px 34px;border-radius:10px;margin-top:40px}
+td{padding:20px 0;border-bottom:2px dashed oklch(1 0 0 / .12);vertical-align:top}
+td:first-child{width:430px;color:var(--feltm);font:600 30px/1.4 var(--fd)}
+td.v{color:oklch(0.88 .1 150)}
+.blk{display:inline-block;font:700 24px var(--fd);color:white;background:var(--red);padding:6px 14px;border-radius:999px;margin-right:12px;box-shadow:0 0 0 4px white;transform:rotate(-3deg)}
+.quote{font:500 30px/1.5 var(--fm);background:var(--red);color:white;padding:30px 36px;border-radius:22px;margin-top:40px;box-shadow:0 0 0 8px white,0 24px 40px -14px oklch(.3 .1 28/.6);transform:rotate(-1.5deg)}
 .cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:64px}
-.cols3 div{border-top:2px solid var(--border);padding-top:24px}
-.cols3 h3{font-size:40px;margin:0;letter-spacing:-.02em}
+.cols3 div{background:var(--paper2);border-radius:26px;padding:30px;box-shadow:0 0 0 2px var(--line) inset}
+.cols3 h3{font:700 42px var(--fd);margin:0}
 .cols3 p{font-size:27px;line-height:1.45;color:var(--muted);margin:14px 0 0}
-.tag{font:600 20px "IBM Plex Mono";letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:5px;border:2px solid}
-.tq{color:var(--signal-ink);border-color:var(--signal)}.tr{color:var(--pass);border-color:var(--pass)}
-pre.arch{font:500 25px/1.55 "IBM Plex Mono";color:var(--chf);margin:56px 0 0;white-space:pre}
-pre.arch em{font-style:normal;color:var(--signal)}pre.arch b{color:oklch(0.85 0.09 155);font-weight:500}
+.tag{font:700 22px var(--fd);letter-spacing:.04em;text-transform:uppercase;padding:8px 16px;border-radius:999px;color:white;box-shadow:0 0 0 4px white;transform:rotate(-3deg)}
+.tq{background:var(--red)}.tr{background:var(--green)}
+pre.arch{font:500 25px/1.6 var(--fm);color:var(--feltfg);margin:56px 0 0;white-space:pre;background:oklch(.18 .02 220/.6);padding:34px 40px;border-radius:26px}
+pre.arch em{font-style:normal;color:oklch(.72 .18 32)}pre.arch b{color:oklch(.88 .1 150);font-weight:500}
+.latch-big{position:absolute;right:170px;bottom:150px;width:460px;height:460px;background:url(../app/static/img/latch-calm.webp) center/contain no-repeat;filter:drop-shadow(0 30px 30px oklch(0 0 0/.45))}
+.latch-alarm{position:absolute;right:150px;bottom:110px;width:300px;height:300px;background:url(../app/static/img/latch-alarm.webp) center/contain no-repeat;filter:drop-shadow(0 20px 20px oklch(.3 .06 60/.45))}
 </style></head><body>
-<section class="s dark" style="padding:100px 110px;display:grid;grid-template-columns:1fr 1.05fr;gap:70px;align-items:center">
+<section class="s dark" style="padding:100px 110px"><div style="display:grid;grid-template-columns:1fr 1.05fr;gap:70px;align-items:center;height:100%">
   <div>
     <div class="k"><span class="mark"><i></i></span><span style="color:var(--chf)">Vultr Agent Rush</span></div>
-    <h1 style="font-size:200px;margin-top:60px">Caveo</h1>
+    <h1 style="font-size:200px;margin-top:40px">Caveo</h1>
     <p class="lead" style="font-size:50px;color:var(--chf);margin-top:24px">An airlock for your invoices.</p>
-    <div class="stamp" style="margin-top:70px">QUARANTINED</div>
+    <div class="stamp" style="margin-top:60px">QUARANTINED</div>
   </div>
-  <div class="shot" style="border-color:var(--chl);transform:rotate(1.5deg)"><img src="img/reveal.png" alt=""></div>
-</section></body></html>
+  <div class="shot" style="align-self:center;transform:rotate(1.5deg)"><img src="img/reveal-v2.png" alt=""></div>
+</div></section></body></html>

@@ -1,0 +1,11 @@
+{
+  "prompt": "Flat top-down photograph of dark charcoal-teal wool felt fabric, soft fuzzy fibers, very even lighting, no objects, no text, no seams, uniform texture filling the whole frame, high detail macro texture for a website background",
+  "model": "gpt-image-2",
+  "provider": "openai",
+  "size": "1536x1024",
+  "quality": "medium",
+  "transparent": false,
+  "refs": [],
+  "filename": "felt_0.png",
+  "generated_at": "2026-11-03T12:12:33"
+}

@@ -30,7 +30,7 @@ function renderInbox() {
       <div class="addr">${esc(e.from_email)}</div>
       <div class="subj">${esc(e.subject)}</div>
       <div class="meta"><span>${esc(t)} · ${e.attachments.length} attachment${e.attachments.length > 1 ? "s" : ""}</span>
-        ${lab ? "" : `<span>not yet checked</span>`}</div>
+        ${lab ? "" : `<span class="tag new">new</span>`}</div>
     </button></li>`;
   }).join("");
 }
@@ -54,6 +54,7 @@ async function select(emailId) {
     await loadCase(e.case.id);
   } else {
     state.caseData = null;
+    $("#case").scrollTop = 0;
     renderUnprocessed(e);
     resetChamber();
   }
@@ -90,6 +91,7 @@ async function loadCase(id) {
   const c = await api(`/api/cases/${id}`);
   if (state.selected !== c.email_id) return;
   const changed = !state.caseData || state.caseData.status !== c.status || state.caseData.id !== c.id;
+  if (!state.caseData || state.caseData.id !== c.id) $("#case").scrollTop = 0;
   state.caseData = c;
   renderChamber(c);
   if (changed || c.status === "processing") renderCase(c);
@@ -156,14 +158,14 @@ function renderEvidence(r, e) {
     : `<div class="shot-cap">No preview produced.</div>`;
   const f = r.fields || {}, v = r.vendor, po = r.po, bank = f.bank || {};
   const row = (label, inv, onfile, ok) => `<tr class="${ok === false ? "mismatch" : ""}"><td>${label}</td><td class="v">${esc(inv ?? "—")}</td>
-      <td class="v">${esc(onfile ?? "—")}</td><td>${ok === undefined ? "" : ok ? '<span class="ok">✓ match</span>' : '<span class="no">✗ differs</span>'}</td></tr>`;
+      <td class="v">${esc(onfile ?? "—")}</td><td>${ok === undefined ? "" : ok ? '<span class="ok" title="matches">✓</span>' : '<span class="no" title="differs">✗</span>'}</td></tr>`;
   const dom = e.from_email.split("@")[1];
   const rows = [
     row("Vendor", f.vendor_name, v && v.name, v ? true : false),
     row("Sender domain", dom, v && v.domains.join(", "), v ? v.domains.includes(dom) : undefined),
     row("PO", f.po_number, po && po.po, po ? true : false),
     `<tr><td>Total</td><td class="num">${money(f.total)}</td><td class="num">${po ? money(po.amount) : "—"}</td>
-      <td>${po && typeof f.total === "number" ? (Math.abs(f.total - po.amount) <= Math.max(1, po.amount * 0.01) ? '<span class="ok">✓ match</span>' : '<span class="no">✗ differs</span>') : ""}</td></tr>`,
+      <td>${po && typeof f.total === "number" ? (Math.abs(f.total - po.amount) <= Math.max(1, po.amount * 0.01) ? '<span class="ok" title="matches">✓</span>' : '<span class="no" title="differs">✗</span>') : ""}</td></tr>`,
   ];
   if (bank.account || bank.routing) {
     const vb = v && v.bank;

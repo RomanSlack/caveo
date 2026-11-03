@@ -1,56 +1,35 @@
-# Caveo design system
+# Caveo design system: "Craft Box"
 
-## Discovery
-- **Artifact:** operational dashboard (AP fraud control) that must also read clearly in a 3-minute demo video.
-- **Audience:** AP clerks and controllers at mid-size companies; hackathon judges watching a screen recording.
-- **Primary action:** decide on a payment (approve / reject / escalate) with the evidence in view.
-- **Adjectives:** forensic, unflinching, precise, calm-under-fire, ledger-like.
-- **Essence:** evidence room ledger.
+## Direction
+Apple-grade layout, spacing and type discipline, built from tactile craft materials (kraft cardboard, stitched felt,
+peel-off stickers, glossy 2000s gel buttons, hazard tape), inspired by the hand-made look of crafted games.
+All materials and the mascot are original (generated for this project; prompts in `pitch/asset-prompts/`).
+Adjectives: tactile, playful, trustworthy, vivid, crafted. Essence: a hand-built airlock.
 
-## Aesthetic and signature move
-Cool bone-white ledger surfaces with ink-green structure, one vermilion signal color reserved for containment.
-**Signature move, the Chamber:** the right column is a dark, gridded containment window. Every sandbox event lands
-there in mono type; blocked attempts are stamped against the wall in vermilion. When the sandbox is destroyed, the
-chamber seals with a hatch pattern and a "DESTROYED" plate. The verdict is a ledger stamp, not a pill badge.
+## Signature moves
+- **The Chamber**: a felt-lined containment box with hazard tape across the top and a glass glare. Blocked attempts
+  are slapped on as red die-cut stickers; the "Sandbox destroyed" seal carries Latch in his STOP pose.
+- **Latch**: the felt airlock-guard mascot. Calm (keyhole shield) on the landing screen and in the tour bubble;
+  alarmed (STOP hand) when a sandbox is destroyed.
+- **Verdict stickers**: rotated, white die-cut border, slap-on spring animation.
 
-## Typography
-- Display + UI: **Schibsted Grotesk** (newsroom grotesk: precise, serious, not the AI default).
-- Evidence/data: **IBM Plex Mono** (raw evidence, URLs, account numbers, timeline).
-- Scale: 1.25 ratio, base 15px: 12 / 15 / 18.75 / 23.4 / 29.3 / 36.6.
+## Type
+Display: **Fredoka** (rounded, chunky). UI/body: **Figtree**. Evidence: **JetBrains Mono**.
 
 ## Color (OKLCH)
-| role | value |
-|---|---|
-| bg | oklch(0.975 0.004 170) |
-| surface | oklch(0.995 0.002 170) |
-| fg / ink | oklch(0.24 0.03 170) |
-| muted | oklch(0.50 0.02 170) |
-| border | oklch(0.88 0.01 170) |
-| brand (ink green) | oklch(0.36 0.06 170) |
-| signal (vermilion, containment + critical) | oklch(0.60 0.20 33) |
-| high (amber) | oklch(0.72 0.15 70) |
-| medium (ochre) | oklch(0.80 0.12 95) |
-| pass (green) | oklch(0.60 0.12 155) |
-| chamber bg | oklch(0.19 0.02 170) |
+kraft 0.74 0.075 70 · paper 0.985 0.012 85 · ink 0.27 0.03 60 · felt 0.25 0.025 220 ·
+green 0.52 0.11 155 (pass/primary) · red 0.60 0.20 28 (critical/blocked) · sun 0.86 0.15 88 (hold/hazard) · sky 0.72 0.10 235 (focus/new).
+Severity is always color + word + glyph.
 
-Severity is always shown as color + word + glyph, never color alone.
-
-## Tokens
-- Spacing base 4px; tight 8 inside groups, 24-32 between regions.
-- Radius: 4px (controls, chips), 8px (panels). No shadows: defined 1px edges only.
-- Motion: 160ms / 240ms, ease-out cubic-bezier(0.2, 0.7, 0.2, 1); timeline rows enter with opacity + 6px translate;
-  the "seal" is an opacity fade of the hatch. prefers-reduced-motion removes translate.
+## Materials and tokens
+Paper cards: radius 22px, stitched dashed outline inset 8px, soft layered lift shadow.
+Buttons: pill gel with top gloss highlight; one primary (green) per view; danger is red gel.
+Motion: spring cubic-bezier(0.34, 1.4, 0.5, 1) for stickers and pops, ease-out 160-260ms elsewhere; reduced-motion honored.
 
 ## Layout
-Three regions, full height: inbox rail (300px) | case evidence (fluid) | chamber (380px, dark).
-Decision bar pinned at the bottom of the case column.
-
-## Components
-Buttons ranked: one primary (ink fill) per view, secondary outlined, destructive actions outlined in signal.
-All have hover / active / focus-visible (2px ring) / disabled states. Tables: labels left, figures right, tabular-nums.
-
-## Slop audit
-Run against references/slop-checklist.md after build. See changelog.
+Three floating boards on kraft: inbox (320) | case (fluid) | chamber (420). Frosted sticky top bar.
+Tablet: chamber drops below. Phone: case first (hook), then inbox, then chamber.
 
 ## Changelog
-- 2026-11-03: initial system.
+- 2026-11-03: initial "evidence ledger" system.
+- 2026-11-03: replaced with "Craft Box" at Roman's request (Apple polish + 2000s tactile vibe).

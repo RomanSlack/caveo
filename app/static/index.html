@@ -7,21 +7,23 @@
 <meta name="description" content="Caveo opens every invoice in a throwaway Vultr sandbox, checks it against your vendor master, and holds payment for a human.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="/img/kraft.webp">
+<link rel="icon" href="/img/latch-calm.webp">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <header class="top">
   <div class="brand">
-    <span class="mark" aria-hidden="true"><span></span></span>
+    <img class="mark" src="/img/latch-calm.webp" alt="" width="40" height="40">
     <span class="word">Caveo</span>
     <span class="org">Granite Peak Outdoors <i>/</i> Accounts Payable</span>
   </div>
   <div class="stats" aria-live="polite">
-    <div><b id="st-destroyed">0</b><span>destroyed</span></div>
-    <div><b id="st-blocked">0</b><span>blocked</span></div>
-    <div><b id="st-secrets">0</b><span>secrets leaked</span></div>
-    <div class="score" title="Visitors who tried to get a fake invoice paid with Craft an attack"><b><span id="st-slipped">0</span>/<span id="st-tried">0</span></b><span>visitor attacks paid</span></div>
+    <div><b id="st-destroyed">0</b><span class="lbl">sandboxes destroyed</span></div>
+    <div><b id="st-blocked">0</b><span class="lbl">attacks blocked</span></div>
+    <div><b id="st-secrets">0</b><span class="lbl">secrets leaked</span></div>
+    <div class="score" title="Visitors who tried to get a fake invoice paid with Craft an attack"><b><span id="st-slipped">0</span>/<span id="st-tried">0</span></b><span class="lbl">visitor attacks paid</span></div>
   </div>
   <div class="top-actions">
     <button class="btn primary" id="btn-craft" type="button">Craft an attack</button>
@@ -42,6 +44,7 @@
 
   <section class="case" id="case" aria-live="polite">
     <div class="empty">
+      <img class="latch-hero" src="/img/latch-calm.webp" alt="Latch, Caveo's felt airlock guard, holding a keyhole shield" width="260" height="260">
       <p class="eyebrow">Caveo · Latin for "I guard against"</p>
       <h1>An airlock for your invoices.</h1>
       <p>Fake "we changed banks" invoices cost US businesses $3 billion a year, and now they hide orders for the AI that reads them. Caveo opens every attachment in a throwaway sandbox on Vultr, checks it against your vendor records, and never lets a model decide to pay.</p>
@@ -110,6 +113,7 @@
   </form>
 </dialog>
 <div class="tour" id="tour" hidden role="status" aria-live="polite">
+  <img class="tour-latch" src="/img/latch-calm.webp" alt="" width="84" height="84">
   <span class="tour-step" id="tour-step"></span>
   <p id="tour-text"></p>
   <div class="tour-actions"><button class="btn small ghost" type="button" id="tour-skip">End tour</button>

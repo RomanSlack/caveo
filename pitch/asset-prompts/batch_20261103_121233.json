@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-11-03T12:12:33",
+  "count": 4,
+  "succeeded": 4,
+  "failed": 0,
+  "total_cost_usd": 0.348,
+  "results": [
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "prompt": "Flat top-down photograph of plain corrugated kraft cardboard surface, warm light brown, subtle fibers and tiny speckles, soft even studio lighting, no objects, no text, no shadows, uniform texture filling the whole frame, high detail macro texture for a website background",
+      "images": [
+        "/home/roman/vultr_hackathon/app/static/img/kraft_0.png"
+      ],
+      "cost_usd": 0.041,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "prompt": "Flat top-down photograph of dark charcoal-teal wool felt fabric, soft fuzzy fibers, very even lighting, no objects, no text, no seams, uniform texture filling the whole frame, high detail macro texture for a website background",
+      "images": [
+        "/home/roman/vultr_hackathon/app/static/img/felt_0.png"
+      ],
+      "cost_usd": 0.041,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "Original cute mascot character named Latch: a small round handmade felt-and-yarn creature shaped like a little airlock door, chunky stitched seams, two big friendly button eyes, tiny felt arms holding a small cardboard shield with a keyhole, warm cream felt body with ink-green and tomato-red felt patches, soft studio lighting, crafted tactile toy look, sticker-like clean silhouette, full body, centered, transparent background, no text",
+      "images": [
+        "/home/roman/vultr_hackathon/app/static/img/latch-calm_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "Original cute mascot character named Latch: a small round handmade felt-and-yarn creature shaped like a little airlock door, chunky stitched seams, two big button eyes wide with alarm, tiny felt arms raised pushing a big round red felt STOP hand gesture forward, warm cream felt body with ink-green and tomato-red felt patches, soft studio lighting, crafted tactile toy look, sticker-like clean silhouette, full body, centered, transparent background, no text",
+      "images": [
+        "/home/roman/vultr_hackathon/app/static/img/latch-alarm_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    }
+  ]
+}
