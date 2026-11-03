@@ -87,7 +87,7 @@ def record(dur):
         pg.wait_for_timeout(int((dur["t6"] + 0.6) * 1000)); nxt()          # "Try it" opens the craft dialog
         pg.wait_for_selector("#craft-dlg[open]"); mark("c1")
         for name, val in [("vendor_id", "V-1002"), ("sender", "real"), ("bank", "changed"), ("injection", "covered")]:
-            pg.wait_for_timeout(1300); pg.select_option(f"select[name={name}]", val)
+            pg.wait_for_timeout(1300); pg.click(f"label.tile:has(input[name={name}][value={val}])")
         pg.wait_for_timeout(max(500, int((dur["c1"] - 5.2) * 1000)))
         pg.click("#craft-form button[type=submit]")
         pg.wait_for_selector(".banner", timeout=120000); mark("c2")

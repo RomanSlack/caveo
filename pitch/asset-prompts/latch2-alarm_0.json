@@ -1,0 +1,13 @@
+{
+  "prompt": "The exact same simple cream felt padlock plush character from the reference image, same shape, same stitching, same dot eyes, now alarmed: eyes wide open as small round circles, mouth a small open O, both stubby arms raised straight forward like a firm STOP, holding a small round tomato-red felt stop sign disc, slight lean back, full body, centered, transparent background, no text",
+  "model": "gpt-image-1.5",
+  "provider": "openai",
+  "size": "1024x1024",
+  "quality": "high",
+  "transparent": true,
+  "refs": [
+    "/tmp/latch2/latch2-calm_0.png"
+  ],
+  "filename": "latch2-alarm_0.png",
+  "generated_at": "2026-11-03T12:36:32"
+}

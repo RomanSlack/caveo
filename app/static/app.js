@@ -11,8 +11,45 @@ const LABEL = { quarantined: "Quarantined", hold: "On hold", review: "Review", r
   approved: "Paid", rejected: "Rejected", escalated: "Escalated", processing: "In sandbox", error: "Error" };
 const money = (n) => (typeof n === "number" ? "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—");
 
+/* ---------------- sound (synthesized, no files) ---------------- */
+const sfx = (() => {
+  let ctx = null, on = localStorage.getItem("caveo-sound") !== "off";
+  const ac = () => (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
+  function tone(type, f0, f1, dur, vol = 0.18, delay = 0) {
+    if (!on) return;
+    try {
+      const c = ac(), t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t + dur);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) { /* audio unavailable */ }
+  }
+  function noise(dur, vol = 0.12, from = 2400, to = 300) {
+    if (!on) return;
+    try {
+      const c = ac(), t = c.currentTime, b = c.createBuffer(1, c.sampleRate * dur, c.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+      const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = b; f.type = "bandpass"; f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+      g.gain.value = vol; src.connect(f).connect(g).connect(c.destination); src.start(t);
+    } catch (e) { /* audio unavailable */ }
+  }
+  return {
+    get on() { return on; },
+    toggle() { on = !on; localStorage.setItem("caveo-sound", on ? "on" : "off"); if (on) this.pop(); return on; },
+    thunk() { tone("sine", 160, 60, 0.22, 0.35); noise(0.08, 0.15, 900, 200); },
+    buzz() { tone("square", 110, 90, 0.12, 0.07); tone("square", 165, 140, 0.12, 0.05); },
+    doors() { noise(0.55, 0.16, 300, 2200); tone("sine", 70, 45, 0.3, 0.3, 0.55); },
+    open() { noise(0.45, 0.12, 2200, 400); },
+    pop() { tone("triangle", 520, 880, 0.09, 0.12); },
+    chime() { tone("triangle", 660, 660, 0.18, 0.12); tone("triangle", 990, 990, 0.25, 0.1, 0.12); },
+    scan() { tone("sawtooth", 300, 1400, 0.8, 0.04); },
+  };
+})();
+
 let state = { inbox: [], selected: null, caseData: null, revealed: false, stats: null };
 const EMPTY = document.querySelector("#case").innerHTML;
+const IDLE_LOG = document.querySelector("#log").innerHTML;
 
 function caseLabel(c) {
   if (!c) return null;
@@ -22,10 +59,10 @@ function caseLabel(c) {
 
 /* ---------------- inbox ---------------- */
 function renderInbox() {
-  $("#inbox").innerHTML = state.inbox.map((e) => {
+  $("#inbox").innerHTML = state.inbox.map((e, i) => {
     const lab = caseLabel(e.case);
     const t = new Date(e.received_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    return `<li><button class="mail" type="button" data-id="${esc(e.id)}" aria-current="${state.selected === e.id}">
+    return `<li style="--i:${firstInbox ? i : 0}"><button class="mail" type="button" data-id="${esc(e.id)}" aria-current="${state.selected === e.id}">
       <div class="from"><span>${esc(e.from_name)}</span>${lab ? `<span class="tag ${esc(lab)}">${esc(LABEL[lab] || lab)}</span>` : ""}</div>
       <div class="addr">${esc(e.from_email)}</div>
       <div class="subj">${esc(e.subject)}</div>
@@ -35,9 +72,12 @@ function renderInbox() {
   }).join("");
 }
 
+let firstInbox = true;
+const style = document.createElement("style"); document.head.appendChild(style);
 async function loadInbox() {
   state.inbox = await api("/api/inbox");
   renderInbox();
+  if (firstInbox) setTimeout(() => { firstInbox = false; style.textContent = ".inbox li { animation: none; }"; }, 1200);
 }
 
 $("#inbox").addEventListener("click", (ev) => {
@@ -99,6 +139,26 @@ async function loadCase(id) {
   else if (changed) loadInbox();
 }
 
+function reactImg(lab) {
+  if (["quarantined", "rejected", "escalated", "hold"].includes(lab)) return `<img class="react" src="/img/latch2-alarm.webp" alt="">`;
+  if (["ready", "approved"].includes(lab)) return `<img class="react" src="/img/latch2-calm.webp" alt="">`;
+  return "";
+}
+const CONFETTI = ["oklch(0.60 0.20 28)", "oklch(0.86 0.15 88)", "oklch(0.52 0.11 155)", "oklch(0.72 0.10 235)", "oklch(0.985 0.012 85)"];
+function celebrate(lab) {
+  const st = document.querySelector(".stamp-wrap");
+  if (!st || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (let i = 0; i < 26; i++) {
+    const b = document.createElement("span"); b.className = "confetti";
+    const a = Math.random() * Math.PI * 2, r = 70 + Math.random() * 120;
+    b.style.cssText = `--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r - 30}px;--rot2:${Math.random() * 720 - 360}deg;background:${CONFETTI[i % CONFETTI.length]};` +
+      `border-radius:${Math.random() > 0.5 ? "50%" : "3px"};width:${8 + Math.random() * 8}px;height:${8 + Math.random() * 8}px`;
+    st.appendChild(b); setTimeout(() => b.remove(), 1000);
+  }
+  if (["quarantined", "hold"].includes(lab)) { const c = $("#case"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake"); }
+  sfx.thunk(); if (["ready", "approved"].includes(lab)) sfx.chime();
+}
+let lastStatus = {};
 function find(results, code) {
   for (const r of results) { const f = r.findings.find((x) => x.code === code); if (f) return f; }
   return null;
@@ -113,8 +173,9 @@ function renderCase(c) {
   const sender = lookalike ? esc(e.from_email.split("@")[0]) + "@" + `<span class="bad">${esc(dom)}</span>` : esc(e.from_email);
   let html = `<div class="case-head"><div><h1>${esc(e.subject)}</h1>
       <div class="sender"><b>${esc(e.from_name)}</b> &lt;${sender}&gt; · ${esc(e.attachments.join(", "))}</div></div>
-      <div class="stamp ${esc(lab)}">${esc(LABEL[lab] || lab)}${c.risk ? `<small>risk: ${esc(c.risk)}</small>` : ""}</div></div>`;
+      <div class="stamp-wrap"><div class="stamp ${esc(lab)}">${esc(LABEL[lab] || lab)}${c.risk ? `<small>risk: ${esc(c.risk)}</small>` : ""}</div>${reactImg(lab)}</div></div>`;
   if (c.status === "processing") {
+    lastStatus[c.id] = "processing";
     html += `<div class="note"><p>Opening the attachment inside a throwaway sandbox. Watch the chamber on the right.</p>
       <span class="by">Caveo agent · working</span></div>`;
     $("#case").innerHTML = html;
@@ -131,6 +192,8 @@ function renderCase(c) {
   html += renderDecision(c, results);
   $("#case").innerHTML = html;
   wireCase(c);
+  const prev = lastStatus[c.id]; lastStatus[c.id] = c.status;
+  if (prev && prev !== c.status) setTimeout(() => celebrate(lab), 60);
 }
 
 function craftBanner(k, c, results) {
@@ -173,7 +236,7 @@ function renderEvidence(r, e) {
     rows.push(row("Routing", bank.routing, vb && vb.routing, vb ? String(bank.routing).replace(/\D/g, "") === vb.routing : undefined));
     rows.push(row("Account", bank.account, vb && vb.account, vb ? String(bank.account).replace(/\D/g, "") === vb.account : undefined));
   }
-  const findings = r.findings.map((x) => `<li class="finding"><span class="tag ${esc(x.severity)}">${esc(x.severity)}</span>
+  const findings = r.findings.map((x, i) => `<li class="finding" style="--i:${i}"><span class="tag ${esc(x.severity)}">${esc(x.severity)}</span>
       <div><h3>${esc(x.title)}</h3><p>${esc(x.detail)}</p>${x.evidence && x.evidence.length ? `<code>${x.evidence.map(esc).join("\n")}</code>` : ""}</div></li>`).join("");
   return `<div class="evidence">
       <div><div class="sec-title"><span>What the sandbox saw</span>${hidden.length ? `<button class="btn small danger" type="button" id="btn-reveal" aria-pressed="${state.revealed}">${state.revealed ? "Hide" : "Reveal"} hidden text (${hidden.length})</button>` : ""}</div>${shot}</div>
@@ -213,6 +276,7 @@ function wireCase(c) {
   const rb = $("#btn-reveal");
   if (rb) rb.addEventListener("click", () => {
     state.revealed = !state.revealed;
+    if (state.revealed) { const sc = document.createElement("span"); sc.className = "scan"; $("#shot").appendChild(sc); setTimeout(() => sc.remove(), 1000); sfx.scan(); setTimeout(() => sfx.buzz(), 750); }
     $("#shot").classList.toggle("reveal", state.revealed);
     rb.textContent = (state.revealed ? "Hide" : "Reveal") + rb.textContent.replace(/^(Hide|Reveal)/, "");
     rb.setAttribute("aria-pressed", state.revealed);
@@ -236,8 +300,9 @@ function resetChamber() {
   $("#ch-id").textContent = "idle";
   $("#walls").innerHTML = "";
   document.querySelectorAll("#lifecycle li").forEach((li) => li.classList.remove("on"));
-  $("#log").innerHTML = `<li class="log-idle">No sandbox running. Attachments never touch the host.</li>`;
+  $("#log").innerHTML = IDLE_LOG;
   $("#seal").hidden = true;
+  $("#chamber").classList.remove("sealed");
 }
 
 let renderedEvents = { case: null, n: 0 };
@@ -250,6 +315,7 @@ async function drainLog() {
     const f = logQueue.shift();
     $("#log").insertAdjacentHTML("beforeend", f.html);
     $("#log").scrollTop = $("#log").scrollHeight;
+    if (f.blocked) { const ch = $("#chamber"); ch.classList.remove("buzz"); void ch.offsetWidth; ch.classList.add("buzz"); sfx.buzz(); }
     await new Promise((r) => setTimeout(r, f.blocked ? 420 : 140));
   }
   logDraining = false;
@@ -261,6 +327,9 @@ function renderChamber(c) {
   const walls = ev.find((x) => x.msg.startsWith("Sandbox walls verified"));
   const destroyed = [...ev].reverse().find((x) => x.msg.startsWith("Destroyed sandbox"));
   $("#ch-id").textContent = created ? created.data.sandbox_id : "starting…";
+  const ch = $("#chamber"), sealNow = c.status === "processing" && !destroyed, wasSealed = ch.classList.contains("sealed");
+  if (sealNow && !wasSealed) { ch.classList.add("sealed"); sfx.doors(); }
+  if (!sealNow && wasSealed) { ch.classList.remove("sealed"); sfx.open(); }
   const on = { created: !!created, walls: !!walls, detonated: !!walls, destroyed: !!destroyed };
   document.querySelectorAll("#lifecycle li").forEach((li) => li.classList.toggle("on", on[li.dataset.step]));
 
@@ -286,7 +355,7 @@ function renderChamber(c) {
   if (fresh.length && c.status !== "processing" && !logDraining && $("#log").children.length === 0) {
     $("#log").innerHTML = fresh.map((f) => f.html).join("");
     $("#log").scrollTop = $("#log").scrollHeight;
-  } else if (fresh.length) { logQueue.push(...fresh); drainLog(); }
+  } else if (fresh.length) { logQueue.push(...fresh); if (sealNow) return; setTimeout(drainLog, wasSealed ? 650 : 0); }
 
   const seal = $("#seal");
   if (destroyed && !logDraining && !logQueue.length) {
@@ -304,7 +373,9 @@ function renderChamber(c) {
 async function loadStats() {
   try {
     const s = await api("/api/stats");
-    state.stats = s;
+    const prevS = state.stats; state.stats = s;
+    if (prevS) for (const [id, k] of [["#st-destroyed", "destroyed"], ["#st-blocked", "blocked"], ["#st-tried", "attacks_tried"]])
+      if (prevS[k] !== s[k]) { const el = $(id).closest("b") || $(id); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
     $("#st-destroyed").textContent = s.destroyed;
     $("#st-tried").textContent = s.attacks_tried; $("#st-slipped").textContent = s.attacks_slipped;
     $("#craft-score").textContent = `${s.attacks_tried} attack${s.attacks_tried === 1 ? "" : "s"} tried by visitors so far. ${s.attacks_slipped} got paid.`;
@@ -330,6 +401,9 @@ $("#upload-form").addEventListener("submit", async (ev) => {
   btn.disabled = false;
 });
 
+const sb = $("#btn-sound");
+const paintSound = () => { sb.innerHTML = `Sound<span class="long"> ${sfx.on ? "on" : "off"}</span>`; sb.setAttribute("aria-pressed", sfx.on); };
+paintSound(); sb.addEventListener("click", () => { sfx.toggle(); paintSound(); });
 const cdlg = $("#craft-dlg");
 const openCraft = () => { $("#craft-err").textContent = ""; loadStats(); cdlg.showModal(); };
 $("#btn-craft").addEventListener("click", openCraft);
@@ -372,8 +446,13 @@ setInterval(() => { if (!state.caseData || state.caseData.status !== "processing
 /* ---------------- guided tour ---------------- */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let touring = false, tourNext = null;
+let typeTimer = null;
 function caption(step, text, nextLabel = "Next") {
-  $("#tour").hidden = false; $("#tour-step").textContent = step; $("#tour-text").textContent = text; $("#tour-next").textContent = nextLabel;
+  $("#tour").hidden = false; $("#tour-step").textContent = step; $("#tour-next").textContent = nextLabel;
+  const p = $("#tour-text"); clearInterval(typeTimer); sfx.pop();
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { p.textContent = text; return; }
+  let i = 0; p.textContent = ""; p.classList.add("typing");
+  typeTimer = setInterval(() => { i += 2; p.textContent = text.slice(0, i); if (i >= text.length) { clearInterval(typeTimer); p.classList.remove("typing"); } }, 16);
 }
 function hold(ms) {
   if (window.__tourManual) ms = 1e9; // video recorder advances steps itself

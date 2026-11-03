@@ -9,13 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="/img/kraft.webp">
-<link rel="icon" href="/img/latch-calm.webp">
+<link rel="icon" href="/img/latch2-calm.webp">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <header class="top">
   <div class="brand">
-    <img class="mark" src="/img/latch-calm.webp" alt="" width="40" height="40">
+    <img class="mark" src="/img/latch2-calm.webp" alt="" width="40" height="40">
     <span class="word">Caveo</span>
     <span class="org">Granite Peak Outdoors <i>/</i> Accounts Payable</span>
   </div>
@@ -27,8 +27,9 @@
   </div>
   <div class="top-actions">
     <button class="btn primary" id="btn-craft" type="button">Craft an attack</button>
-    <button class="btn" id="btn-upload" type="button">Upload invoice</button>
-    <button class="btn ghost" id="btn-reset" type="button">Reset demo</button>
+    <button class="btn" id="btn-upload" type="button">Upload<span class="long"> invoice</span></button>
+    <button class="btn ghost" id="btn-sound" type="button" aria-pressed="true" title="Sound effects">Sound on</button>
+    <button class="btn ghost" id="btn-reset" type="button">Reset<span class="long"> demo</span></button>
   </div>
 </header>
 
@@ -44,7 +45,7 @@
 
   <section class="case" id="case" aria-live="polite">
     <div class="empty">
-      <img class="latch-hero" src="/img/latch-calm.webp" alt="Latch, Caveo's felt airlock guard, holding a keyhole shield" width="260" height="260">
+      <img class="latch-hero" src="/img/latch2-calm.webp" alt="Latch, Caveo's felt airlock guard, holding a keyhole shield" width="260" height="260">
       <p class="eyebrow">Caveo · Latin for "I guard against"</p>
       <h1>An airlock for your invoices.</h1>
       <p>Fake "we changed banks" invoices cost US businesses $3 billion a year, and now they hide orders for the AI that reads them. Caveo opens every attachment in a throwaway sandbox on Vultr, checks it against your vendor records, and never lets a model decide to pay.</p>
@@ -65,7 +66,12 @@
       <li data-step="detonated">Detonated</li><li data-step="destroyed">Destroyed</li>
     </ol>
     <dl class="walls" id="walls"></dl>
-    <ol class="log" id="log"><li class="log-idle">No sandbox running. Attachments never touch the host.</li></ol>
+    <ol class="log" id="log"><li class="log-idle"><img src="/img/latch2-calm.webp" alt="" width="120" height="120"><b>Airlock empty.</b><span>Pick an email and Latch will carry its attachment in here. Nothing gets opened anywhere else.</span></li></ol>
+    <div class="airlock" aria-hidden="true">
+      <div class="door l"></div><div class="door r"></div>
+      <div class="porthole"><span class="light"></span></div>
+      <p class="airlock-label"><b>Sealed</b><span>Detonating the attachment inside…</span></p>
+    </div>
     <div class="seal" id="seal" hidden></div>
   </aside>
 </main>
@@ -89,22 +95,10 @@
 <dialog id="craft-dlg">
   <form id="craft-form" method="dialog">
     <h2>Craft an attack</h2>
-    <p class="muted">Build your own fraudulent invoice. Caveo generates the PDF, then runs it through the same sandbox and rules as everything else. Try to get a payment approved.</p>
+    <p class="muted">Pick your tricks. Caveo builds the fake invoice, then runs it through the same sandbox and rules as everything else. Get it to "ready to pay" and you win.</p>
     <p class="score-line" id="craft-score"></p>
-    <label>Pretend to be
-      <select name="vendor_id"><option value="V-1002">Brightline Logistics (PO-7790, $48,900)</option>
-        <option value="V-1001">Northwind Industrial Supply (PO-7781, $4,812.50)</option>
-        <option value="V-1003">Summit Office Co (PO-7802, $1,265.40)</option></select></label>
-    <label>Send from
-      <select name="sender"><option value="lookalike">A lookalike domain</option><option value="real">The vendor's real domain (hacked mailbox)</option></select></label>
-    <label>Pay to
-      <select name="bank"><option value="changed">A new bank account (yours)</option><option value="on_file">The bank account on file</option></select></label>
-    <label>Hide an instruction for the AI
-      <select name="injection"><option value="hidden">White 1.5pt text</option><option value="covered">Text under a white box</option>
-        <option value="metadata">In the PDF metadata</option><option value="none">No injection</option></select></label>
-    <label>Amount
-      <select name="amount"><option value="match">Matches the PO</option><option value="inflated">18% over the PO</option></select></label>
-    <label class="inline"><input type="checkbox" name="urgency" checked> Add pressure ("pay today, don't call us")</label>
+    <fieldset class="tiles c3"><legend>1 · Who are you pretending to be?</legend><label class="tile"><input type="radio" name="vendor_id" value="V-1002" checked><span><b>Brightline</b><small>freight · $48,900</small></span></label><label class="tile"><input type="radio" name="vendor_id" value="V-1001"><span><b>Northwind</b><small>shelving · $4,812</small></span></label><label class="tile"><input type="radio" name="vendor_id" value="V-1003"><span><b>Summit Office</b><small>supplies · $1,265</small></span></label></fieldset><fieldset class="tiles c2"><legend>2 · Send it from</legend><label class="tile"><input type="radio" name="sender" value="lookalike" checked><span><b>A lookalike domain</b><small>bright1inelogistics.com</small></span></label><label class="tile"><input type="radio" name="sender" value="real"><span><b>Their hacked mailbox</b><small>the vendor's real domain</small></span></label></fieldset><fieldset class="tiles c2"><legend>3 · Get paid into</legend><label class="tile"><input type="radio" name="bank" value="changed" checked><span><b>Your bank account</b><small>a brand-new account</small></span></label><label class="tile"><input type="radio" name="bank" value="on_file"><span><b>Their real account</b><small>bank on file</small></span></label></fieldset><fieldset class="tiles c2"><legend>4 · Hide an order for the AI</legend><label class="tile"><input type="radio" name="injection" value="hidden" checked><span><b>White 1.5pt text</b><small>invisible on the page</small></span></label><label class="tile"><input type="radio" name="injection" value="covered"><span><b>Under a white box</b><small>text painted over</small></span></label><label class="tile"><input type="radio" name="injection" value="metadata"><span><b>In PDF metadata</b><small>never rendered</small></span></label><label class="tile"><input type="radio" name="injection" value="none"><span><b>No injection</b><small>play it straight</small></span></label></fieldset><fieldset class="tiles c2"><legend>5 · Amount</legend><label class="tile"><input type="radio" name="amount" value="match" checked><span><b>Match the PO</b><small>looks legit</small></span></label><label class="tile"><input type="radio" name="amount" value="inflated"><span><b>Pad it 18%</b><small>a little extra</small></span></label></fieldset>
+    <label class="inline pressure"><input type="checkbox" name="urgency" checked> 6 · Add pressure: "pay today, don't call us"</label>
     <p class="form-err" id="craft-err" role="alert"></p>
     <div class="dlg-actions">
       <button class="btn ghost" type="button" id="craft-cancel">Cancel</button>
@@ -113,7 +107,7 @@
   </form>
 </dialog>
 <div class="tour" id="tour" hidden role="status" aria-live="polite">
-  <img class="tour-latch" src="/img/latch-calm.webp" alt="" width="84" height="84">
+  <img class="tour-latch" src="/img/latch2-calm.webp" alt="" width="84" height="84">
   <span class="tour-step" id="tour-step"></span>
   <p id="tour-text"></p>
   <div class="tour-actions"><button class="btn small ghost" type="button" id="tour-skip">End tour</button>

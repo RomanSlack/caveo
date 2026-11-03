@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-11-03T12:35:45",
+  "count": 1,
+  "succeeded": 1,
+  "failed": 0,
+  "total_cost_usd": 0.133,
+  "results": [
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "Original simple mascot character: a tiny soft plush toy made of warm cream felt, shaped like a rounded padlock with a short felt shackle loop on top, very simple silhouette, two small black dot eyes, a tiny curved stitched smile, two short stubby rounded arms, two stubby feet, one single neat stitched seam around the edge, no patches, no buttons, no extra details, minimal and iconic, friendly, soft studio lighting, tactile handmade toy photo, full body, centered, transparent background, no text",
+      "images": [
+        "/tmp/latch2/latch2-calm_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    }
+  ]
+}
