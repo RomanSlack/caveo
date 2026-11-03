@@ -68,9 +68,12 @@ def evaluate(email, sandbox, fields, vendors, pos, history=()):
            "A file is packed inside the PDF, a common way to smuggle malware past email filters.",
            [f"{e['name']} ({e.get('size')} bytes)" for e in rep["embedded_files"]])
     if any(b["kind"] == "renderer_crash" for b in rep.get("behaviors", [])) or "memory" in str((sandbox or {}).get("status", "")):
+        oom = "memory" in str((sandbox or {}).get("status", ""))
         _f(out, "critical", "resource_exhaustion", "Attachment tried to exhaust the machine",
-           "Opening it grabbed memory until its process died inside the sandbox. On a normal laptop or server this freezes the machine.",
-           [f"limit: {LIMIT_NOTE}"])
+           ("It grabbed memory until the kernel's hard limit for this one sandbox killed it. The host never noticed."
+            if oom else "It grabbed memory until its process died inside the sandbox.")
+           + " On a normal laptop or server this freezes the machine.",
+           [f"limit: {LIMIT_NOTE}", f"sandbox status: {(sandbox or {}).get('status')}"])
 
     # 2. Hidden text and prompt injection aimed at AI reviewers
     hidden = rep.get("hidden_text", [])
