@@ -42,12 +42,62 @@ const sfx = (() => {
     doors() { noise(0.55, 0.16, 300, 2200); tone("sine", 70, 45, 0.3, 0.3, 0.55); },
     open() { noise(0.45, 0.12, 2200, 400); },
     pop() { tone("triangle", 520, 880, 0.09, 0.12); },
+    boing() { tone("sine", 260, 720, 0.16, 0.18); tone("sine", 720, 420, 0.14, 0.1, 0.14); },
     chime() { tone("triangle", 660, 660, 0.18, 0.12); tone("triangle", 990, 990, 0.25, 0.1, 0.12); },
     scan() { tone("sawtooth", 300, 1400, 0.8, 0.04); },
   };
 })();
 
+/* ---------------- Latch, the live mascot ---------------- */
+const LATCH = {
+  calm: { src: "/img/latch2-calm.webp", eyes: [[37.7, 52.7], [63.3, 52.8]], size: 9.2 },
+  alarm: { src: "/img/latch2-alarm.webp", eyes: [[40.6, 48.2], [59.0, 48.2]], size: 8.4 },
+};
+function latchHTML(mood = "calm", cls = "") {
+  const m = LATCH[mood];
+  const eyes = m.eyes.map(([x, y]) => `<i class="eye" style="left:${x}%;top:${y}%;width:${m.size}%"><b></b></i>`).join("");
+  return `<span class="latch ${cls}" data-mood="${mood}" aria-hidden="true"><span class="latch-body"><img src="${m.src}" alt="" draggable="false">${eyes}</span></span>`;
+}
+function hydrateLatches(root = document) {
+  root.querySelectorAll("[data-latch]").forEach((el) => { el.outerHTML = latchHTML(el.dataset.latch, el.className); });
+}
+// blink: every Latch on screen blinks on his own random rhythm (sometimes a double blink)
+(function blinkLoop() {
+  document.querySelectorAll(".latch").forEach((l) => {
+    if (Math.random() < 0.35) {
+      l.classList.add("blink"); setTimeout(() => l.classList.remove("blink"), 140);
+      if (Math.random() < 0.25) setTimeout(() => { l.classList.add("blink"); setTimeout(() => l.classList.remove("blink"), 120); }, 260);
+    }
+  });
+  setTimeout(blinkLoop, 1100 + Math.random() * 1500);
+})();
+// eyes follow the cursor
+let lookRaf = 0, lookAt = null;
+addEventListener("pointermove", (ev) => {
+  lookAt = [ev.clientX, ev.clientY];
+  if (lookRaf) return;
+  lookRaf = requestAnimationFrame(() => {
+    lookRaf = 0;
+    document.querySelectorAll(".latch").forEach((l) => {
+      const r = l.getBoundingClientRect();
+      if (!r.width || r.bottom < 0 || r.top > innerHeight) return;
+      const dx = lookAt[0] - (r.left + r.width / 2), dy = lookAt[1] - (r.top + r.height * 0.5), d = Math.hypot(dx, dy) || 1;
+      const k = Math.min(1, d / 260);
+      l.style.setProperty("--lx", ((dx / d) * k * 22).toFixed(1) + "%");
+      l.style.setProperty("--ly", ((dy / d) * k * 18).toFixed(1) + "%");
+    });
+  });
+}, { passive: true });
+// poke him: he hops and squeaks
+document.addEventListener("click", (ev) => {
+  const l = ev.target.closest(".latch");
+  if (!l) return;
+  l.classList.remove("hop"); void l.offsetWidth; l.classList.add("hop");
+  if (typeof sfx !== "undefined") sfx.boing();
+});
+
 let state = { inbox: [], selected: null, caseData: null, revealed: false, stats: null };
+hydrateLatches();
 const EMPTY = document.querySelector("#case").innerHTML;
 const IDLE_LOG = document.querySelector("#log").innerHTML;
 
@@ -140,8 +190,8 @@ async function loadCase(id) {
 }
 
 function reactImg(lab) {
-  if (["quarantined", "rejected", "escalated", "hold"].includes(lab)) return `<img class="react" src="/img/latch2-alarm.webp" alt="">`;
-  if (["ready", "approved"].includes(lab)) return `<img class="react" src="/img/latch2-calm.webp" alt="">`;
+  if (["quarantined", "rejected", "escalated", "hold"].includes(lab)) return latchHTML("alarm", "react");
+  if (["ready", "approved"].includes(lab)) return latchHTML("calm", "react");
   return "";
 }
 const CONFETTI = ["oklch(0.60 0.20 28)", "oklch(0.86 0.15 88)", "oklch(0.52 0.11 155)", "oklch(0.72 0.10 235)", "oklch(0.985 0.012 85)"];
@@ -363,7 +413,7 @@ function renderChamber(c) {
     const hiddenN = ev.filter((x) => x.kind === "detect").length;
     const parts = [blockedN && `${blockedN} attempt${blockedN === 1 ? "" : "s"} blocked`, hiddenN && `${hiddenN} hidden instruction${hiddenN === 1 ? "" : "s"} neutralized`].filter(Boolean);
     const caught = ev.filter(isBlocked).map((x) => x.msg.replace(/^BLOCKED /, "").replace(/^Caught attachment script: /, "")).slice(0, 6);
-    seal.innerHTML = `<b>Sandbox destroyed</b>${esc(destroyed.data.sandbox_id)} · ${esc(destroyed.data.seconds)}s · ${esc(parts.join(" · ") || "nothing suspicious")} · nothing persisted`
+    seal.innerHTML = latchHTML("alarm", "seal-latch") + `<b>Sandbox destroyed</b>${esc(destroyed.data.sandbox_id)} · ${esc(destroyed.data.seconds)}s · ${esc(parts.join(" · ") || "nothing suspicious")} · nothing persisted`
       + (caught.length ? `<ul class="seal-list">${caught.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>` : "");
     seal.hidden = false;
   } else seal.hidden = true;
