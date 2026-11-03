@@ -1,0 +1,7 @@
+.env
+__pycache__/
+data/caveo.db
+data/runs/
+data/jobs/
+data/uploads/
+research/

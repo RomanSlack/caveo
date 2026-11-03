@@ -1,0 +1,11 @@
+{
+  "id": "msg-003",
+  "from_name": "Summit Office Co",
+  "from_email": "billing@summitoffice.co",
+  "subject": "Your invoice #88213 is ready",
+  "received_at": "2026-11-03T10:05:00-07:00",
+  "body": "Your invoice for PO-7802 is ready. For security it is delivered as a protected document. Open the attachment to view and pay.\n\nSummit Office Co Billing",
+  "attachments": [
+    "SummitOffice_Invoice_88213.html"
+  ]
+}

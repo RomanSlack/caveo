@@ -1,0 +1,11 @@
+{
+  "id": "msg-002",
+  "from_name": "Brightline Logistics Billing",
+  "from_email": "billing@brightline-logistics.co",
+  "subject": "URGENT: Updated remittance details - INV-B-5530",
+  "received_at": "2026-11-03T09:47:00-07:00",
+  "body": "Hello,\n\nPlease note our bank details have changed due to an audit. Kindly update your records and process the attached invoice for PO-7790 today to avoid a late fee and service interruption.\n\nThe old account is no longer active. Please do not call our office as we are moving phone systems; reply to this email with any questions.\n\nRegards,\nMark Ellison\nAccounts Receivable, Brightline Logistics",
+  "attachments": [
+    "Brightline_INV-B-5530.pdf"
+  ]
+}

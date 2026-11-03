@@ -1,0 +1,23 @@
+[
+  {
+    "po": "PO-7781",
+    "vendor_id": "V-1001",
+    "amount": 4812.5,
+    "status": "received",
+    "desc": "Steel shelving units x25, pallet jacks x2"
+  },
+  {
+    "po": "PO-7790",
+    "vendor_id": "V-1002",
+    "amount": 48900.0,
+    "status": "received",
+    "desc": "Q4 freight, Salt Lake DC to Denver and Boise, 14 loads"
+  },
+  {
+    "po": "PO-7802",
+    "vendor_id": "V-1003",
+    "amount": 1265.4,
+    "status": "open",
+    "desc": "Office supplies, Q4 restock"
+  }
+]

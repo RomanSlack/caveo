@@ -1,0 +1,11 @@
+{
+  "id": "msg-001",
+  "from_name": "Northwind AR",
+  "from_email": "ar@northwind-supply.com",
+  "subject": "Invoice INV-20419 for PO-7781",
+  "received_at": "2026-11-03T08:12:00-07:00",
+  "body": "Hi Granite Peak team,\n\nAttached is invoice INV-20419 for PO-7781 (shelving and pallet jacks, delivered 10/27). Net 30.\n\nThanks,\nDana Ruiz\nNorthwind Industrial Supply",
+  "attachments": [
+    "Northwind_INV-20419.pdf"
+  ]
+}

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caveo · the AP clerk that can't be phished</title>
+<meta name="description" content="Caveo opens every invoice in a throwaway Vultr sandbox, checks it against your vendor master, and holds payment for a human.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><span></span></span>
+    <span class="word">Caveo</span>
+    <span class="org">Granite Peak Outdoors <i>/</i> Accounts Payable</span>
+  </div>
+  <div class="stats" aria-live="polite">
+    <div><b id="st-live">0</b><span>sandboxes live</span></div>
+    <div><b id="st-destroyed">0</b><span>destroyed</span></div>
+    <div><b id="st-blocked">0</b><span>attempts blocked</span></div>
+    <div><b id="st-secrets">0</b><span>secrets exposed</span></div>
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="btn-upload" type="button">Upload invoice</button>
+    <button class="btn ghost" id="btn-reset" type="button">Reset demo</button>
+  </div>
+</header>
+
+<main class="grid">
+  <nav class="rail" aria-label="Inbox">
+    <div class="rail-head">
+      <h2>Inbox</h2>
+      <button class="btn small" id="btn-run-all" type="button">Run all</button>
+    </div>
+    <ul id="inbox" class="inbox"></ul>
+    <p class="rail-foot">ap@granitepeak.example · vendor master: 3 vendors · open POs: 3</p>
+  </nav>
+
+  <section class="case" id="case" aria-live="polite">
+    <div class="empty">
+      <h1>Every invoice is guilty until the sandbox says otherwise.</h1>
+      <p>Pick an email on the left and run Caveo. Each attachment is opened in a throwaway container on Vultr with no network and no secrets, read by a vision model, checked against your vendor master, and held for a human.</p>
+    </div>
+  </section>
+
+  <aside class="chamber" id="chamber" aria-label="Sandbox chamber">
+    <div class="ch-head">
+      <span class="ch-title">The Chamber</span>
+      <span class="ch-id" id="ch-id">idle</span>
+    </div>
+    <ol class="lifecycle" id="lifecycle">
+      <li data-step="created">Created</li><li data-step="walls">Walls verified</li>
+      <li data-step="detonated">Detonated</li><li data-step="destroyed">Destroyed</li>
+    </ol>
+    <dl class="walls" id="walls"></dl>
+    <ol class="log" id="log"><li class="log-idle">No sandbox running. Attachments never touch the host.</li></ol>
+    <div class="seal" id="seal" hidden></div>
+  </aside>
+</main>
+
+<dialog id="upload-dlg">
+  <form id="upload-form" method="dialog">
+    <h2>Upload a suspicious invoice</h2>
+    <p class="muted">PDF, HTML, PNG or JPG, up to 5 MB. It is opened only inside a throwaway sandbox.</p>
+    <label>File<input type="file" name="file" required accept=".pdf,.html,.htm,.png,.jpg,.jpeg"></label>
+    <label>Sender email<input type="email" name="from_email" value="billing@vendor.example" required></label>
+    <label>Sender name<input type="text" name="from_name" value="Vendor Billing"></label>
+    <label>Subject<input type="text" name="subject" value="Invoice attached"></label>
+    <label>Email body<textarea name="body" rows="3"></textarea></label>
+    <p class="form-err" id="upload-err" role="alert"></p>
+    <div class="dlg-actions">
+      <button class="btn ghost" type="button" id="upload-cancel">Cancel</button>
+      <button class="btn primary" type="submit">Open in sandbox</button>
+    </div>
+  </form>
+</dialog>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "V-1001",
+    "name": "Northwind Industrial Supply",
+    "domains": [
+      "northwind-supply.com"
+    ],
+    "remit_email": "ar@northwind-supply.com",
+    "bank": {
+      "bank_name": "First Mountain Bank",
+      "routing": "124000054",
+      "account": "7730144417"
+    },
+    "phone_on_file": "+1 801-555-0142"
+  },
+  {
+    "id": "V-1002",
+    "name": "Brightline Logistics",
+    "domains": [
+      "brightlinelogistics.com"
+    ],
+    "remit_email": "billing@brightlinelogistics.com",
+    "bank": {
+      "bank_name": "Zions Bank",
+      "routing": "124000054",
+      "account": "5520981033"
+    },
+    "phone_on_file": "+1 385-555-0199"
+  },
+  {
+    "id": "V-1003",
+    "name": "Summit Office Co",
+    "domains": [
+      "summitoffice.co"
+    ],
+    "remit_email": "billing@summitoffice.co",
+    "bank": {
+      "bank_name": "Wells Fargo",
+      "routing": "121000248",
+      "account": "9081127745"
+    },
+    "phone_on_file": "+1 801-555-0177"
+  }
+]
