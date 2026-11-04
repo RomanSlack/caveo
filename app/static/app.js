@@ -314,6 +314,46 @@ function mailBody(e) {
   return e.body ? `<details class="mailbody"><summary>Read the email text <span>untrusted</span></summary><p>${esc(e.body).replace(/\n/g, "<br>")}</p></details>` : "";
 }
 
+/* while it works: the sandbox's screenshot under a scanning beam, a live checklist, and what the AI finds as it finds it */
+const WORK_SHELL = `<div class="work" id="work"><div class="work-shot" id="work-shot"><div class="work-wait"><i></i><i></i><i></i>
+    <span>Waiting for a picture from inside the sandbox. The file itself never comes out.</span></div><b class="beam" aria-hidden="true"></b></div>
+  <div class="work-side"><div class="work-time"><span>Checking</span><b id="work-t">0.0s</b></div><ol class="work-steps" id="work-steps"></ol>
+  <div class="work-found" id="work-found"></div><ul class="work-flags" id="work-flags"></ul></div></div>`;
+function workSteps(ev) {
+  const has = (p) => ev.find((x) => x.msg.startsWith(p));
+  const shot = has("Vision model reading"), ex = has("Extracted fields"), note = has("Case note written"), vault = ev.find((x) => x.kind === "vault");
+  const flags = ev.filter((x) => x.kind === "policy" && /^\[(CRITICAL|HIGH)\]/.test(x.msg)).length;
+  const st = (done, now) => (done ? "done" : now ? "now" : "todo");
+  return { shot, ex, steps: [
+    [st(shot, true), "Sandbox opens the file", "no internet, no secrets"],
+    [st(ex, shot), "AI reads the picture", "qwen3.8-27b · Vultr Inference"],
+    [st(ex, false), "Checked against your records", ex ? (flags ? `${flags} red flag${flags > 1 ? "s" : ""}` : "all clear") : "vendor master + open POs"],
+    [st(note, ex), "Case note for a human", "glm-5.3 · Vultr Inference"],
+    [st(vault, note), "Evidence sealed", "Vultr Object Storage"],
+  ] };
+}
+function patchWork(c) {
+  const w = $("#work"); if (!w) return;
+  const ev = c.events || [], { shot, ex, steps } = workSteps(ev);
+  const t0 = ev.length ? ev[0].ts : Date.now() / 1000;
+  $("#work-t").textContent = (Math.max(0, Date.now() / 1000 - t0)).toFixed(1) + "s";
+  const sh = steps.map(([s, a, b]) => `<li class="${s}"><i aria-hidden="true">${s === "done" ? "✓" : ""}</i><span>${esc(a)}<small>${esc(b)}</small></span></li>`).join("");
+  const ol = $("#work-steps"); if (ol.dataset.h !== sh) { ol.innerHTML = sh; ol.dataset.h = sh; }
+  const src = shot && shot.data && shot.data.pages && shot.data.pages[0];
+  const box = $("#work-shot");
+  if (src && !box.querySelector("img")) { box.querySelector(".work-wait")?.remove(); box.insertAdjacentHTML("afterbegin", `<img src="${esc(src)}" alt="Screenshot taken inside the sandbox">`); }
+  const f = ex && ex.data && ex.data.fields;
+  const found = $("#work-found");
+  if (f && !found.dataset.done) {
+    found.dataset.done = "1";
+    const chips = [f.vendor_name, f.total != null ? money(f.total) : null, f.po_number, f.bank && f.bank.account ? "acct ••" + String(f.bank.account).replace(/\D/g, "").slice(-4) : null].filter(Boolean);
+    found.innerHTML = `<span>The AI read:</span>` + chips.map((x, i) => `<b style="--i:${i}">${esc(String(x))}</b>`).join("");
+  }
+  const fl = ev.filter((x) => x.kind === "policy" && /^\[(CRITICAL|HIGH)\]/.test(x.msg)), ul = $("#work-flags");
+  for (let i = ul.children.length; i < fl.length && i < 4; i++) ul.insertAdjacentHTML("beforeend", `<li>${esc(fl[i].msg.replace(/^\[\w+\]\s*/, ""))}</li>`);
+  w.classList.toggle("reading", !!src && !ex);
+}
+
 function renderCase(c) {
   const e = c.data.email;
   const lab = caseLabel(c);
@@ -327,6 +367,7 @@ function renderCase(c) {
     if ($("#now-note")) $("#now-note").textContent = NOW_NOTE[cur] || NOW_NOTE[1];
     const sp = $(".stamp.processing"); if (sp) sp.textContent = cur > 1 ? "Checking" : LABEL.processing;
     setLatch($(".stamp-wrap .latch"), cur > 1 ? "inspect" : "carry");
+    patchWork(c);
     return;
   }
   const cs = $("#case"); cs.classList.toggle("again", cs.dataset.shown === c.id); cs.dataset.shown = c.id;
@@ -337,8 +378,9 @@ function renderCase(c) {
     lastStatus[c.id] = "processing";
     const cur = pathState(c, e).findIndex((s) => s.st === "now");
     html += `<div class="note working"><p id="now-note">${esc(NOW_NOTE[cur] || NOW_NOTE[1])}</p>
-      <span class="by">Caveo agent · working · nothing to do yet</span></div>`;
+      <span class="by">Caveo agent · working · nothing to do yet</span></div>` + WORK_SHELL;
     $("#case").innerHTML = html;
+    patchWork(c);
     return;
   }
   if (c.status === "error") {

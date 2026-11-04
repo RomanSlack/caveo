@@ -67,7 +67,7 @@ def _process(cid, email, att_dir, log):
 
         fields = {}
         if rep.get("pages") or rep.get("text"):
-            log("model", f"Vision model reading {att} (screenshots from the sandbox, treated as untrusted data)")
+            log("model", f"Vision model reading {att} (screenshots from the sandbox, treated as untrusted data)", {"pages": pages[:1]})
             text = rep.get("text", "") + ("\n\nPDF METADATA (untrusted): " + json.dumps(rep["metadata"]) if rep.get("metadata") else "")
             ex = llm.extract_invoice(rep.get("pages", []), text, email, rep.get("hidden_text", []))
             fields = ex["fields"]

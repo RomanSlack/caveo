@@ -51,3 +51,4 @@ Tablet: chamber drops below. Phone: case first (hook), then inbox, then chamber.
 - 2026-11-04: Latch got six new poses (latch3-*.webp) and a pose state machine.
 - 2026-11-04: added the path (linear 5-step process), numbered sections, vault row, next-email flow, 3-step landing.
 - 2026-11-03: replaced with "Craft Box" at Roman's request (Apple polish + 2000s tactile vibe).
+- 2026-11-04: checking workbench (sandbox screenshot under a scanning beam, live 5-item checklist with timer, "The AI read" chips, red-flag stickers as they land); "Runs on Vultr" badge in the Chamber header; verdict Latch moved clear of the sticky path bar.
