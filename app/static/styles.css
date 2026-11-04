@@ -369,7 +369,7 @@ dialog label.inline input { width: 20px; height: 20px; margin: 0; accent-color: 
 
 /* verdict sticker + Latch reaction + felt confetti */
 .stamp-wrap { position: relative; justify-self: end; padding-left: 78px; }
-.react { position: absolute !important; left: -6px; top: -12px; width: 82px; z-index: 3; filter: drop-shadow(0 10px 10px oklch(0.3 0.06 60 / 0.45));
+.react { position: absolute !important; left: -6px; top: -41px; width: 82px; z-index: 3; filter: drop-shadow(0 10px 10px oklch(0.3 0.06 60 / 0.45));
   animation: peek 700ms var(--spring) 260ms both; }
 @keyframes peek { from { opacity: 0; transform: translateY(30px) scale(0.5) rotate(-20deg); } }
 .confetti { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; border-radius: 3px; pointer-events: none; z-index: 4;
@@ -623,10 +623,9 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
 
 /* ---------- guide: Latch hops to the next thing to click, holding a paper note ---------- */
 .guide-hole { position: fixed; z-index: 40; pointer-events: none; border-radius: 18px; border: 3px dashed oklch(0.99 0.02 85);
-  box-shadow: 0 0 0 4px var(--sun), 0 0 0 200vmax oklch(0.22 0.03 60 / 0.38);
+  box-shadow: 0 0 0 4px var(--sun), 0 6px 22px oklch(0.6 0.15 85 / 0.45);
   transition: left 420ms var(--spring), top 420ms var(--spring), width 420ms var(--spring), height 420ms var(--spring);
   animation: holepulse 1.8s ease-in-out infinite; }
-.guide-hole.big { box-shadow: 0 0 0 4px var(--sun), 0 0 0 200vmax oklch(0.22 0.03 60 / 0.22); }
 @keyframes holepulse { 50% { border-color: var(--sun); } }
 .guide { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; transition: transform 520ms var(--spring); }
 .guide.hopping { animation: guidein 520ms var(--spring) both; }
@@ -650,3 +649,10 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
 body.guiding .latch-hero { opacity: 0; visibility: hidden; transform: scale(0.6); } /* he hopped out to guide you */
 .guide-acts { display: flex; align-items: center; gap: 12px; }
 .guide.docked .guide-card { transform: rotate(0); }
+
+/* Pose images differ in height; in-flow spots get a fixed box and Latch stands on its floor, so swapping poses never moves the page */
+.latch-hero { aspect-ratio: 520 / 603; }
+.idle-latch { aspect-ratio: 520 / 600; }
+.react { aspect-ratio: 520 / 695; }
+.latch-hero .latch-body, .idle-latch .latch-body, .react .latch-body { position: absolute; left: 0; right: 0; bottom: 0; }
+#guide-show[hidden] { display: none; }
