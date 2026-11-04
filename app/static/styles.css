@@ -538,7 +538,7 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
 @keyframes ping { 50% { box-shadow: 0 0 0 3px white, 0 0 0 12px oklch(0.72 0.10 235 / 0); transform: scale(1.06); } }
 .sec-title .n, .why .n, .nextup .n, .vaultrow .n { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 50%;
   font: 700 13px/1 var(--f-display); font-style: normal; color: white; background: var(--ink); vertical-align: 1px; flex: none; }
-.sec-title > span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 4px; }
+.sec-title > span { display: inline-flex; align-items: center; gap: 0 4px; }
 .sec-title small { font: 500 12px var(--f-ui); color: var(--ink-soft); }
 .case-head .mailbody { margin-top: 10px; font-size: 14px; }
 .mailbody summary { cursor: pointer; font: 600 13px var(--f-display); color: var(--ink-soft); width: max-content; border-radius: 8px; }
