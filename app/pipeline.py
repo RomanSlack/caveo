@@ -88,8 +88,7 @@ def _process(cid, email, att_dir, log):
     log("model", "Case note written", {"seconds": note["seconds"]})
     if email.get("crafted"):
         store.attack_verdict(cid, worst["decision"])
-    store.update_case(cid, status="awaiting_human", risk=worst["risk"], decision=worst["decision"],
-                      data={"results": results, "note": note["content"].strip()})
+    store.update_case(cid, data={"results": results, "note": note["content"].strip()})
     if vault.enabled():
         try:
             keys = []
@@ -109,7 +108,9 @@ def _process(cid, email, att_dir, log):
                 + (" (attachment renamed .quarantine)" if flagged else ""), {"bucket": vault.BUCKET, "host": vault.HOST, "keys": keys})
         except Exception as e:
             log("vault", f"Vault upload failed: {e.__class__.__name__}")
+    # only now is the case ready for a human: the evidence is already sealed, so the UI never sees a half-finished case
     log("decision", {"quarantined": "Payment BLOCKED and attachment quarantined. Security review required.",
                      "hold": "Payment ON HOLD until the vendor is verified by phone.",
                      "review": "Needs a human look before approval.",
                      "ready": "All controls passed. Waiting for a human to approve payment."}[worst["decision"]])
+    store.update_case(cid, status="awaiting_human", risk=worst["risk"], decision=worst["decision"])
