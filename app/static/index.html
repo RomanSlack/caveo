@@ -125,6 +125,13 @@
   <div class="tour-actions"><button class="btn small ghost" type="button" id="tour-skip">End tour</button>
     <button class="btn small primary" type="button" id="tour-next">Next</button></div>
 </div>
+<div class="guide-hole" id="guide-hole" hidden aria-hidden="true"></div>
+<div class="guide" id="guide" hidden role="status" aria-live="polite">
+  <span class="guide-latch" data-latch="point"></span>
+  <div class="guide-card"><span class="guide-step" id="guide-step"></span><b id="guide-title"></b><p id="guide-text"></p>
+    <div class="guide-acts"><button class="btn small primary" type="button" id="guide-show" hidden>Show me</button>
+    <button class="linkish quiet" type="button" id="guide-close">Hide the guide</button></div></div>
+</div>
 <script src="/app.js"></script>
 </body>
 </html>

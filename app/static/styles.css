@@ -620,3 +620,33 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
 .seal.clean { box-shadow: 0 0 0 3px var(--green-hi), 0 12px 24px -8px oklch(0 0 0 / 0.6); }
 .seal.clean b { color: oklch(0.8 0.13 150); }
 @media (prefers-reduced-motion: reduce) { .zzz { display: none; } }
+
+/* ---------- guide: Latch hops to the next thing to click, holding a paper note ---------- */
+.guide-hole { position: fixed; z-index: 40; pointer-events: none; border-radius: 18px; border: 3px dashed oklch(0.99 0.02 85);
+  box-shadow: 0 0 0 4px var(--sun), 0 0 0 200vmax oklch(0.22 0.03 60 / 0.38);
+  transition: left 420ms var(--spring), top 420ms var(--spring), width 420ms var(--spring), height 420ms var(--spring);
+  animation: holepulse 1.8s ease-in-out infinite; }
+.guide-hole.big { box-shadow: 0 0 0 4px var(--sun), 0 0 0 200vmax oklch(0.22 0.03 60 / 0.22); }
+@keyframes holepulse { 50% { border-color: var(--sun); } }
+.guide { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; transition: transform 520ms var(--spring); }
+.guide.hopping { animation: guidein 520ms var(--spring) both; }
+@keyframes guidein { from { opacity: 0; scale: 0.6; } }
+.guide-card { pointer-events: auto; position: relative; margin-left: 58px; padding: 14px 16px 10px 54px; border-radius: 18px; background: var(--paper);
+  box-shadow: var(--lift-hi), 0 0 0 3px white; transform: rotate(-1deg); }
+.guide-card::before { content: ""; position: absolute; top: -9px; left: 46%; width: 60px; height: 18px; transform: rotate(3deg);
+  background: oklch(0.93 0.04 90 / 0.85); box-shadow: 0 1px 2px oklch(0.3 0.05 60 / 0.2); }
+.guide-latch { position: absolute !important; left: 0; bottom: -6px; width: 104px; z-index: 2; pointer-events: auto; filter: drop-shadow(0 8px 8px oklch(0.2 0.05 60 / 0.45)); }
+.guide-step { display: block; font: 700 11px/1 var(--f-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--red); }
+.guide-card b { display: block; margin-top: 4px; font: 700 19px/1.15 var(--f-display); }
+.guide-card p { margin: 4px 0 6px; font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+.linkish.quiet { color: var(--ink-soft); font-weight: 600; font-size: 12px; }
+@media (max-width: 760px) {
+  .guide-card { margin-left: 44px; padding-left: 44px; }
+  .guide-latch { width: 84px; }
+  .guide-card b { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { .guide, .guide-hole { transition: none; } }
+.latch-hero { transition: opacity var(--d-med) var(--ease), transform var(--d-med) var(--spring); }
+body.guiding .latch-hero { opacity: 0; visibility: hidden; transform: scale(0.6); } /* he hopped out to guide you */
+.guide-acts { display: flex; align-items: center; gap: 12px; }
+.guide.docked .guide-card { transform: rotate(0); }

@@ -110,7 +110,7 @@ document.addEventListener("animationend", (ev) => {
 });
 // the landing Latch takes turns: points at the inbox, then waves at you
 setInterval(() => {
-  const h = document.querySelector(".latch.latch-hero"); if (!h || h.matches(":hover")) return;
+  const h = document.querySelector(".latch.latch-hero"); if (!h || h.matches(":hover") || document.body.classList.contains("guiding")) return;
   setLatch(h, h.dataset.mood === "point" || innerWidth < 760 ? (Math.random() < 0.5 ? "calm" : "cheer") : "point");
 }, 4200);
 // poke him: he hops and squeaks
@@ -178,7 +178,7 @@ async function select(emailId) {
     renderUnprocessed(e);
     resetChamber();
     const il = $("#log .latch"); if (il) { const n = setLatch(il, "calm"); n.classList.add("hop"); }
-    const ib = $("#log .log-idle b"); if (ib) ib.textContent = "Latch is awake.";
+    const ib = $("#log .log-idle > b"); if (ib) ib.textContent = "Latch is awake.";
     const is = $("#log .log-idle > span:not(.latch)"); if (is) is.textContent = "Press \u201cOpen it in a sandbox\u201d and he carries the attachment in here. Nothing gets opened anywhere else.";
   }
 }
@@ -739,3 +739,79 @@ document.addEventListener("click", (ev) => {
   if (ev.target.closest("[data-activity]")) showActivity();
   if (ev.target.closest("[data-start]")) { const f = state.inbox.find((x) => !x.case) || state.inbox[0]; if (f) select(f.id).then(() => { if (innerWidth < 760) $("#case").scrollIntoView({ behavior: "smooth" }); }); }
 });
+
+
+/* ---------------- guide: Latch walks you through it, one real click at a time ---------------- */
+// Not a modal and not a timer: every step is read from what is on screen, and it waits for you to do the thing.
+const guide = { on: false, key: "", target: null, decided: 0 };
+const GUIDE_DONE = "caveo-guide-done";
+function guideStep() {
+  if (touring || document.querySelector("dialog[open]")) return null;
+  const c = state.caseData, sel = state.selected;
+  const decided = state.inbox.filter((e) => e.case && ["approved", "rejected", "escalated"].includes(e.case.status)).length;
+  if (!sel) {
+    if ($(".act")) return null; // Activity view: leave them be
+    const m = $(".mail.start") || document.querySelector(".mail");
+    return m && { k: "pick", el: m, mood: "point", n: 1, t: "Pick an email", p: "Start with this one. Clicking it opens nothing, it just shows you the email." };
+  }
+  if (!c) { const b = $("#btn-run"); return b && { k: "run", el: b, mood: "carry", n: 2, t: "Open it in a sandbox", p: "Press the green button. I carry the attachment into a sealed box on Vultr with no internet and no secrets." }; }
+  if (c.status === "processing" || logDraining || logQueue.length)
+    return { k: "watch", el: innerWidth >= 760 ? $("#chamber") : $("#path"), mood: "inspect", n: 3, t: "Watch the Chamber", p: "Whatever the file tries hits the walls and gets a red sticker. When I'm done, the box is destroyed." };
+  if (c.status === "awaiting_human") {
+    const rb = $("#btn-reveal");
+    if (rb && !state.revealed) return { k: "reveal", el: rb, mood: "alarm", n: 4, t: "Something is hidden", p: "This invoice has text you can't see. Press Reveal to read what it tells the AI." };
+    const d = $("#sec-decide");
+    const say = { quarantined: "Payment is blocked. Reject it, or send it to security.", hold: "Call the vendor on the number in your records first, then tick the box.",
+      review: "Something looks off. Read the red flags, then decide.", ready: "Every check passed. A person still approves it. The AI never pays." }[c.decision];
+    return d && { k: "decide-" + c.id, el: d.querySelector(".btn.primary") || d, mood: c.decision === "ready" ? "cheer" : c.decision === "hold" ? "phone" : "calm", n: 5, t: "Your call", p: say };
+  }
+  if (decided >= 3) return { k: "graduate", el: $("#btn-craft"), mood: "cheer", n: "✓", t: "You've got it", p: "Now try to beat me. Build your own fake invoice and see if it gets paid.", end: true };
+  const nx = $("[data-next], [data-activity]");
+  return nx && { k: "next-" + c.id, el: nx, mood: "cheer", n: "✓", t: `Done. ${decided} down`, p: "Press Next email to keep going." };
+}
+function placeGuide(s) {
+  const g = $("#guide"), hole = $("#guide-hole"), r = s.el.getBoundingClientRect(), pad = 8;
+  const off = r.bottom < 70 || r.top > innerHeight - 20;
+  g.classList.toggle("docked", off);
+  const sm = $("#guide-show"); sm.hidden = !off; sm.textContent = r.top > innerHeight - 20 ? "Show me ↓" : "Show me ↑";
+  if (off) { hole.hidden = true; const gw = Math.min(330, innerWidth - 24); g.style.width = gw + "px";
+    g.style.transform = `translate(${(innerWidth - gw) / 2}px, ${innerHeight - (g.offsetHeight || 150) - 14}px)`; return; }
+  const big = r.width * r.height > innerWidth * innerHeight * 0.25;
+  hole.hidden = false; hole.classList.toggle("big", big);
+  Object.assign(hole.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
+  const gw = Math.min(330, innerWidth - 24), gh = g.offsetHeight || 150, gap = 16;
+  let x, y;
+  if (innerWidth < 760) { x = (innerWidth - gw) / 2; y = r.bottom + gap + gh < innerHeight ? r.bottom + gap : Math.max(12, r.top - gap - gh); }
+  else if (r.right + gap + gw < innerWidth - 8 && !big) { x = r.right + gap; y = r.top + r.height / 2 - gh / 2; }
+  else if (r.left - gap - gw > 8) { x = r.left - gap - gw; y = big ? r.top + 120 : r.top + r.height / 2 - gh / 2; }
+  else { x = r.left + r.width / 2 - gw / 2; y = r.top - gap - gh > 70 ? r.top - gap - gh : r.bottom + gap; }
+  x = Math.max(12, Math.min(x, innerWidth - gw - 12)); y = Math.max(76, Math.min(y, innerHeight - gh - 12));
+  g.style.width = gw + "px"; g.style.transform = `translate(${x}px, ${y}px)`;
+}
+function guideTick() {
+  const g = $("#guide");
+  const s = guide.on ? guideStep() : null;
+  if (s && s.k === "pick") { const r = s.el.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) s.el = null; } // phones: don't yank them off the intro
+  document.body.classList.toggle("guiding", !!(s && s.el));
+  if (!s || !s.el) { g.hidden = true; $("#guide-hole").hidden = true; guide.key = ""; return; }
+  if (s.k !== guide.key) {
+    guide.key = s.k;
+    const was = g.hidden; g.hidden = false;
+    $("#guide-step").textContent = typeof s.n === "number" ? `Step ${s.n} of 5` : "Nice";
+    $("#guide-title").textContent = s.t; $("#guide-text").textContent = s.p;
+    setLatch($("#guide .latch"), s.mood);
+    g.classList.remove("hopping"); void g.offsetWidth; if (!was) g.classList.add("hopping");
+    if (typeof sfx !== "undefined" && !was) sfx.pop();
+    if (s.el.id !== "chamber" && s.k !== "pick") s.el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (s.end) { localStorage.setItem(GUIDE_DONE, "1"); }
+  }
+  placeGuide(s);
+}
+function startGuide() { guide.on = true; guide.key = ""; guideTick(); }
+function stopGuide() { guide.on = false; localStorage.setItem(GUIDE_DONE, "1"); guideTick(); }
+$("#guide-close").addEventListener("click", stopGuide);
+$("#guide-show").addEventListener("click", () => { const st = guideStep(); if (st && st.el) st.el.scrollIntoView({ behavior: "smooth", block: "center" }); });
+setInterval(guideTick, 300);
+addEventListener("resize", guideTick); addEventListener("scroll", guideTick, { passive: true, capture: true });
+document.addEventListener("click", (ev) => { if (ev.target.closest("[data-start]")) startGuide(); if (ev.target.closest("[data-tour]")) guide.on = false; });
+if (!localStorage.getItem(GUIDE_DONE) && location.hash !== "#tour" && !window.__tourManual) setTimeout(startGuide, 1400);
