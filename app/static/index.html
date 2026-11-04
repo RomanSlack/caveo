@@ -36,7 +36,7 @@
 <main class="grid">
   <nav class="rail" aria-label="Inbox">
     <div class="rail-head">
-      <h2>Inbox</h2>
+      <div><h2>Inbox</h2><span class="inbox-count" id="inbox-count" aria-live="polite"></span></div>
       <div class="rail-btns"><button class="btn small" id="btn-activity" type="button">Activity</button>
       <button class="btn small" id="btn-run-all" type="button">Run all</button></div>
     </div>
@@ -55,10 +55,16 @@
       <p class="eyebrow">Caveo · Latin for "I guard against"</p>
       <h1>An airlock for your invoices.</h1>
       <p>Fake "we changed banks" invoices cost US businesses $3 billion a year, and now they hide orders for the AI that reads them. Caveo opens every attachment in a throwaway sandbox on Vultr, checks it against your vendor records, and never lets a model decide to pay.</p>
+      <ol class="how" aria-label="How it works">
+        <li><b>1</b><span>Pick an email<small>from the inbox</small></span></li>
+        <li><b>2</b><span>Watch it get opened<small>in a sealed Vultr sandbox</small></span></li>
+        <li><b>3</b><span>Make the call<small>pay, reject or escalate</small></span></li>
+      </ol>
       <div class="empty-actions">
-        <button class="btn primary big" type="button" data-tour>Watch the 60-second tour</button>
-        <button class="btn big" type="button" data-craft>Try to beat it</button>
+        <button class="btn primary big" type="button" data-start>Start with the first email</button>
+        <button class="btn big" type="button" data-tour>Watch the 60-second tour</button>
       </div>
+      <p class="or-craft">Feeling sneaky? <button class="linkish" type="button" data-craft>Build a fake invoice and try to get it paid</button></p>
     </div>
   </section>
 

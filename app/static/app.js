@@ -109,10 +109,13 @@ function caseLabel(c) {
 
 /* ---------------- inbox ---------------- */
 function renderInbox() {
+  const doneN = state.inbox.filter((e) => e.case && !["processing"].includes(e.case.status)).length;
+  $("#inbox-count").textContent = state.inbox.length ? `${doneN} of ${state.inbox.length} checked` : "";
+  const startId = !state.selected && (state.inbox.find((x) => !x.case) || {}).id;
   $("#inbox").innerHTML = state.inbox.map((e, i) => {
     const lab = caseLabel(e.case);
     const t = new Date(e.received_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    return `<li style="--i:${firstInbox ? i : 0}"><button class="mail" type="button" data-id="${esc(e.id)}" aria-current="${state.selected === e.id}">
+    return `<li style="--i:${firstInbox ? i : 0}"><button class="mail${e.id === startId ? " start" : ""}" type="button" data-id="${esc(e.id)}" aria-current="${state.selected === e.id}">${e.id === startId ? `<span class="start-here" aria-hidden="true">Start here</span>` : ""}
       <div class="from"><span>${esc(e.from_name)}</span>${lab ? `<span class="tag ${esc(lab)}">${esc(LABEL[lab] || lab)}</span>` : ""}</div>
       ${e.inbound ? `<span class="tag inbound">real email</span>` : ""}
       <div class="addr">${esc(e.from_email)}</div>
@@ -152,12 +155,12 @@ async function select(emailId) {
 }
 
 function renderUnprocessed(e) {
-  $("#case").innerHTML = `
-    <div class="case-head"><div><h1>${esc(e.subject)}</h1>
+  $("#case").innerHTML = pathHTML(null, e) + `
+    <div class="case-head" id="sec-email"><div><h1>${esc(e.subject)}</h1>
       <div class="sender"><b>${esc(e.from_name)}</b> &lt;${esc(e.from_email)}&gt; · ${esc(e.attachments.join(", "))}</div></div></div>
-    <div class="note"><p>${esc(e.body).replace(/\n/g, "<br>")}</p><span class="by">Email body · untrusted</span></div>
-    <div class="decision"><div class="why">Not opened yet. Caveo will open the attachment inside a fresh sandbox, never on this machine.</div>
-      <button class="btn primary" type="button" id="btn-run">Open in sandbox and check</button></div>`;
+    <div class="note"><p>${esc(e.body).replace(/\n/g, "<br>")}</p><span class="by">Email body · untrusted · Caveo has not opened the attachment</span></div>
+    <div class="nextup"><b>${secNum(2)}Next: open it in a sandbox</b><p>Caveo carries the attachment into a fresh, sealed sandbox on Vultr and opens it there, never on this server. Then it checks what it saw against your vendor records.</p>
+      <button class="btn primary big" type="button" id="btn-run">Open it in a sandbox</button></div>`;
   $("#btn-run").addEventListener("click", () => run(e.id));
 }
 
@@ -215,6 +218,68 @@ function find(results, code) {
   return null;
 }
 
+/* ---------------- the path: one linear process for every case ---------------- */
+const STEPS = [["email", "Arrived"], ["sandbox", "Sandboxed"], ["checks", "Checked"], ["vault", "Vaulted"], ["decide", "Your call"]];
+const flagsOf = (results) => results.flatMap((r) => r.findings).filter((f) => ["critical", "high", "medium"].includes(f.severity));
+function pathState(c, e) {
+  const ev = c ? c.events : [];
+  const destroyed = [...ev].reverse().find((x) => x.msg.startsWith("Destroyed sandbox"));
+  const vaultEv = ev.find((x) => x.kind === "vault");
+  const flags = flagsOf((c && c.data.results) || []).length, blocked = ev.filter(isBlocked).length;
+  let cur;
+  if (!c) cur = 1;
+  else if (c.status === "processing") cur = !destroyed ? 1 : !ev.some((x) => x.msg.startsWith("Case note written")) ? 2 : 3;
+  else if (c.status === "error") cur = destroyed ? 2 : 1;
+  else if (c.status === "awaiting_human") cur = 4;
+  else cur = 5;
+  const vkeys = vaultEv && vaultEv.data && vaultEv.data.keys;
+  const sub = [
+    e.from_email.split("@")[1],
+    destroyed ? `${destroyed.data.seconds}s${blocked ? ` · ${blocked} blocked` : ""}` : c ? "sealed, running" : "next up",
+    cur > 2 ? (flags ? `${flags} red flag${flags === 1 ? "" : "s"}` : "all clear") : cur === 2 ? "reading" : "",
+    vkeys ? `${vkeys.length} files sealed` : cur > 3 ? "local only" : cur === 3 ? "sealing" : "",
+    cur === 5 ? LABEL[c.status] : cur === 4 ? (c.decision === "quarantined" ? "blocked" : "your turn") : "",
+  ];
+  const alert = [false, blocked > 0, flags > 0, false, false];
+  return STEPS.map(([k, name], i) => {
+    const st = c && c.status === "error" && i === cur ? "err" : i < cur || (i === 4 && cur === 5) ? "done" : i === cur ? "now" : "todo";
+    return { k, name, sub: sub[i], st, alert: st === "done" && alert[i] };
+  });
+}
+function stepLI(s, i) {
+  const dot = s.st === "done" ? (s.alert ? "!" : "✓") : s.st === "err" ? "✗" : i + 1;
+  return `<li class="${s.st}${s.alert ? " alert" : ""}" data-k="${s.k}"${s.st === "now" ? ' aria-current="step"' : ""}>
+    <button type="button" data-go="${s.k}"><span class="dot">${dot}</span><span class="pl"><b>${esc(s.name)}</b><small>${esc(s.sub)}</small></span></button></li>`;
+}
+function pathHTML(c, e) {
+  return `<ol class="path" id="path" data-case="${esc(c ? c.id : e.id)}" aria-label="Where this invoice is in the process">${pathState(c, e).map(stepLI).join("")}</ol>`;
+}
+function patchPath(c, e) {
+  const lis = document.querySelectorAll("#path > li");
+  pathState(c, e).forEach((s, i) => { const h = stepLI(s, i); if (lis[i] && lis[i].dataset.h !== h) { lis[i].outerHTML = h; document.querySelectorAll("#path > li")[i].dataset.h = h; } });
+}
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-go]"); if (!b) return;
+  const k = b.dataset.go;
+  if (k === "sandbox" && innerWidth >= 760) { const ch = $("#chamber"); ch.classList.add("spot"); setTimeout(() => ch.classList.remove("spot"), 1400); }
+  const el = document.getElementById("sec-" + k) || (k === "sandbox" ? $("#chamber") : null);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: k === "decide" ? "end" : "start" });
+});
+const NOW_NOTE = [
+  "", "Step 2 of 5. The attachment is sealed inside a throwaway sandbox on Vultr: no internet, no secrets, hard limits. Watch the Chamber.",
+  "Step 3 of 5. The sandbox is gone. A vision model is reading its screenshots, then fixed rules check them against your vendor records.",
+  "Step 4 of 5. Sealing the evidence into the quarantine vault on Vultr Object Storage.",
+];
+const secNum = (n) => `<i class="n" aria-hidden="true">${n}</i>`;
+function nextEmail() {
+  const open = (e) => !e.case || e.case.status === "awaiting_human";
+  const i = state.inbox.findIndex((x) => x.id === state.selected);
+  return state.inbox.slice(i + 1).find(open) || state.inbox.slice(0, Math.max(i, 0)).find(open);
+}
+function mailBody(e) {
+  return e.body ? `<details class="mailbody"><summary>Read the email text <span>untrusted</span></summary><p>${esc(e.body).replace(/\n/g, "<br>")}</p></details>` : "";
+}
+
 function renderCase(c) {
   const e = c.data.email;
   const lab = caseLabel(c);
@@ -222,13 +287,21 @@ function renderCase(c) {
   const lookalike = find(results, "lookalike_domain");
   const dom = e.from_email.split("@")[1];
   const sender = lookalike ? esc(e.from_email.split("@")[0]) + "@" + `<span class="bad">${esc(dom)}</span>` : esc(e.from_email);
-  let html = `<div class="case-head"><div><h1>${esc(e.subject)}</h1>
-      <div class="sender"><b>${esc(e.from_name)}</b> &lt;${sender}&gt; · ${esc(e.attachments.join(", "))}</div></div>
+  if (c.status === "processing" && $("#path") && $("#path").dataset.case === c.id) {
+    patchPath(c, e);
+    const cur = pathState(c, e).findIndex((s) => s.st === "now");
+    if ($("#now-note")) $("#now-note").textContent = NOW_NOTE[cur] || NOW_NOTE[1];
+    const sp = $(".stamp.processing"); if (sp) sp.textContent = cur > 1 ? "Checking" : LABEL.processing;
+    return;
+  }
+  let html = pathHTML(c, e) + `<div class="case-head" id="sec-email"><div><h1>${esc(e.subject)}</h1>
+      <div class="sender"><b>${esc(e.from_name)}</b> &lt;${sender}&gt; · ${esc(e.attachments.join(", "))}</div>${mailBody(e)}</div>
       <div class="stamp-wrap"><div class="stamp ${esc(lab)}">${esc(LABEL[lab] || lab)}${c.risk ? `<small>risk: ${esc(c.risk)}</small>` : ""}</div>${reactImg(lab)}</div></div>`;
   if (c.status === "processing") {
     lastStatus[c.id] = "processing";
-    html += `<div class="note"><p>Opening the attachment inside a throwaway sandbox. Watch the chamber on the right.</p>
-      <span class="by">Caveo agent · working</span></div>`;
+    const cur = pathState(c, e).findIndex((s) => s.st === "now");
+    html += `<div class="note working"><p id="now-note">${esc(NOW_NOTE[cur] || NOW_NOTE[1])}</p>
+      <span class="by">Caveo agent · working · nothing to do yet</span></div>`;
     $("#case").innerHTML = html;
     return;
   }
@@ -240,6 +313,7 @@ function renderCase(c) {
   if (e.crafted) html += craftBanner(e.crafted, c, results);
   if (c.data.note) html += `<div class="note"><p>${esc(c.data.note)}</p><span class="by">Read by qwen3.8-27b · note by glm-5.3 · Vultr Serverless Inference · cannot change the verdict</span></div>`;
   for (const r of results) html += renderEvidence(r, e);
+  html += vaultRow(c);
   html += renderDecision(c, results);
   $("#case").innerHTML = html;
   wireCase(c);
@@ -290,34 +364,42 @@ function renderEvidence(r, e) {
   const findings = r.findings.map((x, i) => `<li class="finding" style="--i:${i}"><span class="tag ${esc(x.severity)}">${esc(x.severity)}</span>
       <div><h3>${esc(x.title)}</h3><p>${esc(x.detail)}</p>${x.evidence && x.evidence.length ? `<code>${x.evidence.map(esc).join("\n")}</code>` : ""}</div></li>`).join("");
   return `<div class="evidence">
-      <div><div class="sec-title"><span>What the sandbox saw</span>${hidden.length ? `<button class="btn small danger" type="button" id="btn-reveal" aria-pressed="${state.revealed}">${state.revealed ? "Hide" : "Reveal"} hidden text (${hidden.length})</button>` : ""}</div>${shot}</div>
-      <div><div class="sec-title"><span>Invoice vs vendor master</span></div>
+      <div id="sec-sandbox"><div class="sec-title"><span>${secNum(2)}What the sandbox saw</span>${hidden.length ? `<button class="btn small danger" type="button" id="btn-reveal" aria-pressed="${state.revealed}">${state.revealed ? "Hide" : "Reveal"} hidden text (${hidden.length})</button>` : ""}</div>${shot}</div>
+      <div id="sec-checks"><div class="sec-title"><span>${secNum(3)}Invoice vs your vendor records</span></div>
         <table class="fields"><thead><tr><th>Field</th><th>On invoice</th><th>On file</th><th><span class="sr">Check</span></th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
     </div>
-    <div class="sec-title" style="margin-top:32px"><span>Policy findings · deterministic rules, not the model</span></div>
+    <div class="sec-title" style="margin-top:32px"><span>${secNum(3)}What the rules found <small>fixed rules, not the AI</small></span></div>
     <ul class="findings" style="margin-top:0">${findings}</ul>`;
 }
 
-const evLink = (c) => `<a class="ev" href="/api/cases/${esc(c.id)}/evidence" download>Evidence pack ↓</a>`;
+const evLink = (c) => `<a class="btn small" href="/api/cases/${esc(c.id)}/evidence" download>Evidence pack ↓</a>`;
+function vaultRow(c) {
+  const v = c.events.find((x) => x.kind === "vault"), keys = (v && v.data && v.data.keys) || [];
+  const q = keys.some((k) => k.endsWith(".quarantine"));
+  return `<div class="vaultrow" id="sec-vault"><span class="lock" aria-hidden="true">🔒</span><div><b>${secNum(4)}${keys.length ? "Evidence sealed in the vault" : "Evidence kept on this server"}</b>
+    <span>${keys.length ? `${keys.length} files in a private bucket on Vultr Object Storage${q ? ", the attachment renamed .quarantine so nobody can double-click it" : ""}. Auditors get links that expire in an hour.`
+      : "The vault is not configured here, so the evidence pack is built from the local audit log."}</span></div>${evLink(c)}</div>`;
+}
 function renderDecision(c, results) {
   if (c.status !== "awaiting_human") {
     const h = c.data.human || {};
-    return `<div class="decision"><div class="why"><b>${esc(LABEL[c.status])}</b> by a human${h.note ? ": " + esc(h.note) : ""}.
-      ${h.callback_verified ? " Vendor verified by phone." : ""}</div>${evLink(c)}</div>`;
+    const nx = nextEmail();
+    return `<div class="decision done" id="sec-decide"><div class="why">${secNum(5)}<b>${esc(LABEL[c.status])}</b> by a human${h.note ? ": " + esc(h.note) : ""}.
+      ${h.callback_verified ? " Vendor verified by phone." : ""} This invoice is done.</div>
+      ${nx ? `<button class="btn primary" type="button" data-next="${esc(nx.id)}">Next email: ${esc(nx.from_name)} →</button>`
+        : `<button class="btn primary" type="button" data-activity>Inbox done. See what Caveo saved →</button>`}</div>`;
   }
   const phone = results.map((r) => r.vendor && r.vendor.phone_on_file).find(Boolean);
   if (c.decision === "quarantined") {
-    return `<div class="decision"><div class="why"><b>Payment blocked by policy.</b> Quarantined cases cannot be approved from this screen.</div>
-      ${evLink(c)}
+    return `<div class="decision" id="sec-decide"><div class="why">${secNum(5)}<b>Your call: payment is blocked.</b> Quarantined invoices cannot be approved. Reject it, or send it to security.</div>
       <button class="btn danger" type="button" data-act="reject">Reject invoice</button>
       <button class="btn primary" type="button" data-act="escalate">Escalate to security</button>
       <p class="err" id="dec-err" role="alert"></p></div>`;
   }
   const hold = c.decision === "hold";
-  return `<div class="decision">
+  return `<div class="decision" id="sec-decide">
       ${hold ? `<label class="cb"><input type="checkbox" id="cb-callback"> I called the vendor at ${esc(phone || "the number on file")} (from our records, not the email) and they confirmed this invoice.</label>` : ""}
-      <div class="why">${hold ? "<b>On hold.</b> Verify by phone before paying." : "<b>All controls passed.</b> A human still makes the call."}</div>
-      ${evLink(c)}
+      <div class="why">${secNum(5)}${hold ? "<b>Your call: call the vendor first.</b> Use the number in your records, not the one in the email." : c.decision === "review" ? "<b>Your call: take a closer look.</b> Something is off but not proven fraud." : "<b>Your call: every check passed.</b> A human still approves the payment."}</div>
       <button class="btn ghost" type="button" data-act="reject">Reject</button>
       <button class="btn primary" type="button" data-act="approve">Approve payment</button>
       <p class="err" id="dec-err" role="alert"></p></div>`;
@@ -620,3 +702,8 @@ async function showActivity() {
   document.querySelectorAll("ol.tl li").forEach((li) => li.addEventListener("click", () => select(li.dataset.email)));
 }
 $("#btn-activity").addEventListener("click", showActivity);
+document.addEventListener("click", (ev) => {
+  const n = ev.target.closest("[data-next]"); if (n) { select(n.dataset.next).then(() => innerWidth < 760 ? $("#case").scrollIntoView({ behavior: "smooth" }) : $("#case").scrollTo({ top: 0 })); return; }
+  if (ev.target.closest("[data-activity]")) showActivity();
+  if (ev.target.closest("[data-start]")) { const f = state.inbox.find((x) => !x.case) || state.inbox[0]; if (f) select(f.id).then(() => { if (innerWidth < 760) $("#case").scrollIntoView({ behavior: "smooth" }); }); }
+});

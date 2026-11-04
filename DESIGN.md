@@ -11,6 +11,9 @@ Adjectives: tactile, playful, trustworthy, vivid, crafted. Essence: a hand-built
   are slapped on as red die-cut stickers; the "Sandbox destroyed" seal carries Latch in his STOP pose.
 - **Latch**: the felt airlock-guard mascot. Calm (keyhole shield) on the landing screen and in the tour bubble;
   alarmed (STOP hand) when a sandbox is destroyed.
+- **The path**: every case carries one sticky 5-step track (Arrived, Sandboxed, Checked, Vaulted, Your call). Steps light
+  green as the pipeline runs, turn red with a "!" when that step found trouble, and the current step pings in sky blue.
+  Case sections carry the same numbers, and a finished case always offers "Next email" so the flow never dead-ends.
 - **Verdict stickers**: rotated, white die-cut border, slap-on spring animation.
 
 ## Type
@@ -32,4 +35,5 @@ Tablet: chamber drops below. Phone: case first (hook), then inbox, then chamber.
 
 ## Changelog
 - 2026-11-03: initial "evidence ledger" system.
+- 2026-11-04: added the path (linear 5-step process), numbered sections, vault row, next-email flow, 3-step landing.
 - 2026-11-03: replaced with "Craft Box" at Roman's request (Apple polish + 2000s tactile vibe).
