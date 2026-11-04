@@ -2,7 +2,7 @@
 
 **An airlock for your invoices.**
 
-Live: https://caveo-144-202-120-235.sslip.io (open it and press **Watch the 60-second tour**, or go straight to https://caveo-144-202-120-235.sslip.io/#tour)
+Live: https://caveo.work (open it and press **Watch the 60-second tour**, or go straight to https://caveo.work/#tour). Email any invoice to `invoices@caveo.work` and watch it land in the inbox.
 
 Caveo (Latin, *"I guard against"*, the root of *caveat*) is an AI agent for accounts payable. It opens every vendor
 invoice, attachment and link inside a throwaway sandbox on Vultr, reads it with a vision model, checks it against
@@ -77,7 +77,7 @@ fraud team or the auditors.
   the whole gVisor sandbox at 768 MB; the host never notices. Quarantined.
 
 ## A real inbox
-Email any invoice to the live inbox address shown in the app (a Resend inbound address). Caveo polls Resend's Receiving
+Email any invoice to `invoices@caveo.work`, the live inbox (Resend inbound). Caveo polls Resend's Receiving
 API every few seconds, downloads only PDF/HTML/image attachments (5 MB cap, rate-limited per sender), never opens them
 on the host, and runs them through the same sandbox. Resend's SPF/DKIM/DMARC verdicts become policy evidence: a DMARC
 failure is a HIGH finding; a full pass is noted but never trusted on its own, because hacked mailboxes pass too.

@@ -10,7 +10,7 @@ import json, os, pathlib, subprocess, sys, time, urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "pitch" / "video"; VO = OUT / "vo"; VO.mkdir(parents=True, exist_ok=True)
-URL = sys.argv[sys.argv.index("--url") + 1] if "--url" in sys.argv else "https://caveo-144-202-120-235.sslip.io"
+URL = sys.argv[sys.argv.index("--url") + 1] if "--url" in sys.argv else "https://caveo.work"
 SLIDES = ROOT / "pitch" / "img"
 KEY = os.environ["VULTR_INFERENCE_KEY"]
 NAME = "Kahvayoh"  # spelled so the TTS says it right; Whisper transcribes this exactly as "Caveo"

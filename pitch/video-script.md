@@ -6,7 +6,7 @@ and writes `pitch/Caveo-demo.mp4` (about 2:50, 1080p). The lines live in `LINES`
 To record it in your own voice instead, follow the table below (target 3:00).
 
 
-Record at 1440x900, browser zoom 100%, on https://caveo-144-202-120-235.sslip.io.
+Record at 1440x900, browser zoom 100%, on https://caveo.work.
 Before recording: press **Reset demo**. Keep the mouse slow. Pause one beat after every stamp.
 
 | time | screen | voiceover |
