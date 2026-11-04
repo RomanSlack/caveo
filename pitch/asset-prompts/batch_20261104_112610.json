@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-11-04T11:26:10",
+  "count": 6,
+  "succeeded": 6,
+  "failed": 0,
+  "total_cost_usd": 0.798,
+  "results": [
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "The exact same simple cream felt padlock plush character from the reference image: same rounded padlock body, same short felt shackle loop on top, same single stitched seam, same stubby arms and feet, same soft studio lighting and tactile handmade toy photo look. Now asleep: eyes closed as two small downward curved stitched lines, tiny relaxed smile, body tilted slightly to one side, arms resting down, sitting peacefully. Full body, centered, transparent background, no text, no extra characters.",
+      "images": [
+        "/tmp/latch3/latch3-sleep_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "The exact same simple cream felt padlock plush character from the reference image: same rounded padlock body, same short felt shackle loop on top, same single stitched seam, same stubby arms and feet, same soft studio lighting and tactile handmade toy photo look. Now carrying a small plain white paper envelope hugged in both stubby arms in front of its body, small black dot eyes, small determined smile, mid-step walking forward. Full body, centered, transparent background, no text, no extra characters.",
+      "images": [
+        "/tmp/latch3/latch3-carry_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "The exact same simple cream felt padlock plush character from the reference image: same rounded padlock body, same short felt shackle loop on top, same single stitched seam, same stubby arms and feet, same soft studio lighting and tactile handmade toy photo look. Now inspecting: holding up a small felt magnifying glass with a dark ring and clear lens in one stubby arm beside its face, small black dot eyes, mouth a small focused flat line, leaning slightly forward curiously. Full body, centered, transparent background, no text, no extra characters.",
+      "images": [
+        "/tmp/latch3/latch3-inspect_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "The exact same simple cream felt padlock plush character from the reference image: same rounded padlock body, same short felt shackle loop on top, same single stitched seam, same stubby arms and feet, same soft studio lighting and tactile handmade toy photo look. Now cheering: both stubby arms raised high up in the air, eyes closed happily as two small upward arcs, big open happy smile, tiny hop with feet off the ground. Full body, centered, transparent background, no text, no extra characters.",
+      "images": [
+        "/tmp/latch3/latch3-cheer_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "The exact same simple cream felt padlock plush character from the reference image: same rounded padlock body, same short felt shackle loop on top, same single stitched seam, same stubby arms and feet, same soft studio lighting and tactile handmade toy photo look. Now on the phone: holding a small green felt telephone handset against the side of its body with one stubby arm, small black dot eyes, small neutral mouth, listening carefully. Full body, centered, transparent background, no text, no extra characters.",
+      "images": [
+        "/tmp/latch3/latch3-phone_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    },
+    {
+      "ok": true,
+      "provider": "openai",
+      "model": "gpt-image-1.5",
+      "prompt": "The exact same simple cream felt padlock plush character from the reference image: same rounded padlock body, same short felt shackle loop on top, same single stitched seam, same stubby arms and feet, same soft studio lighting and tactile handmade toy photo look. Now pointing: one stubby arm stretched out pointing to the left side of the image, other arm relaxed, small black dot eyes looking left, friendly smile. Full body, centered, transparent background, no text, no extra characters.",
+      "images": [
+        "/tmp/latch3/latch3-point_0.png"
+      ],
+      "cost_usd": 0.133,
+      "error": null
+    }
+  ]
+}

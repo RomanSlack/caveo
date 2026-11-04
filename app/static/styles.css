@@ -369,7 +369,7 @@ dialog label.inline input { width: 20px; height: 20px; margin: 0; accent-color: 
 
 /* verdict sticker + Latch reaction + felt confetti */
 .stamp-wrap { position: relative; justify-self: end; padding-left: 78px; }
-.react { position: absolute !important; left: 0; top: -6px; width: 74px; z-index: 3; filter: drop-shadow(0 10px 10px oklch(0.3 0.06 60 / 0.45));
+.react { position: absolute !important; left: -6px; top: -12px; width: 82px; z-index: 3; filter: drop-shadow(0 10px 10px oklch(0.3 0.06 60 / 0.45));
   animation: peek 700ms var(--spring) 260ms both; }
 @keyframes peek { from { opacity: 0; transform: translateY(30px) scale(0.5) rotate(-20deg); } }
 .confetti { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; border-radius: 3px; pointer-events: none; z-index: 4;
@@ -448,8 +448,7 @@ dialog label.inline.pressure { margin-top: 16px; font: 600 14px var(--f-display)
 .latch[data-mood="alarm"] .latch-body { animation: jitter 0.9s ease-in-out infinite; }
 .latch img { display: block; width: 100%; height: auto; pointer-events: none; }
 .latch .eye { position: absolute; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
-  background: radial-gradient(circle, rgb(232 219 198) 58%, rgb(232 219 198 / 0) 72%); }
-.latch[data-mood="alarm"] .eye { background: radial-gradient(circle, rgb(244 229 208) 58%, rgb(244 229 208 / 0) 72%); }
+  background: radial-gradient(circle, rgb(var(--felt)) 58%, rgb(var(--felt) / 0) 72%); }
 .latch .eye b { position: absolute; left: 50%; top: 50%; width: 62%; height: 66%; border-radius: 50%; background: oklch(0.16 0.01 60);
   transform: translate(calc(-50% + var(--lx)), calc(-50% + var(--ly))) scaleY(1); transition: transform 120ms ease-out; }
 .latch .eye b::after { content: ""; position: absolute; left: 22%; top: 18%; width: 30%; height: 30%; border-radius: 50%; background: white; opacity: 0.9; }
@@ -594,3 +593,30 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
   .case-head { grid-template-columns: 1fr; }
   .case-head .stamp-wrap { justify-self: start; }
 }
+
+/* ---------- Latch poses: each one moves differently ---------- */
+@keyframes swap { 0% { transform: scale(1.18, 0.7); opacity: 0.4; } 55% { transform: scale(0.94, 1.08); opacity: 1; } 100% { transform: none; } }
+.latch[data-mood="sleep"] .latch-body { animation: snooze 4.2s ease-in-out infinite; }
+@keyframes snooze { 50% { transform: scale(1.04, 0.95) rotate(-2deg); } }
+.zzz { position: absolute; right: 2%; top: 0; width: 30%; height: 40%; pointer-events: none; }
+.zzz i { position: absolute; left: 0; bottom: 0; font: 700 22px/1 var(--f-display); font-style: normal; color: oklch(0.95 0.03 85); text-shadow: 0 2px 4px oklch(0 0 0 / 0.5); opacity: 0;
+  animation: zfloat 3.6s ease-out infinite; }
+.zzz i:nth-child(2) { animation-delay: 1.2s; font-size: 17px; }
+.zzz i:nth-child(3) { animation-delay: 2.4s; font-size: 27px; }
+@keyframes zfloat { 0% { opacity: 0; transform: translate(0, 0) rotate(-10deg); } 20% { opacity: 0.9; } 100% { opacity: 0; transform: translate(26px, -60px) rotate(12deg); } }
+.latch[data-mood="carry"] .latch-body { animation: waddle 0.8s ease-in-out infinite; }
+@keyframes waddle { 0%, 100% { transform: rotate(-4deg) translateY(0); } 25% { transform: rotate(0) translateY(-5%); } 50% { transform: rotate(4deg) translateY(0); } 75% { transform: rotate(0) translateY(-5%); } }
+.latch[data-mood="inspect"] .latch-body { animation: peer 2.6s ease-in-out infinite; }
+@keyframes peer { 0%, 100% { transform: rotate(0) translateX(0); } 30% { transform: rotate(-5deg) translateX(-3%); } 65% { transform: rotate(4deg) translateX(3%); } }
+.latch[data-mood="cheer"] .latch-body { animation: cheer 0.9s var(--spring) infinite; }
+@keyframes cheer { 0%, 100% { transform: scale(1.06, 0.92); } 45% { transform: translateY(-10%) scale(0.96, 1.05) rotate(-3deg); } 70% { transform: translateY(0) rotate(2deg); } }
+.latch[data-mood="phone"] .latch-body { animation: nod 1.5s ease-in-out infinite; }
+@keyframes nod { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(3deg) translateY(1%); } 40% { transform: rotate(0); } 60% { transform: rotate(3deg) translateY(1%); } }
+.latch[data-mood="point"] .latch-body { animation: pointing 1.4s ease-in-out infinite; }
+@keyframes pointing { 0%, 100% { transform: translateX(0) rotate(0); } 50% { transform: translateX(-4%) rotate(-3deg); } }
+.latch.swap.swap .latch-body { animation: swap 420ms var(--spring) both; }
+.latch.hop.hop .latch-body { animation: hop 620ms var(--spring); }
+.latch:hover .latch-body { animation: wave 700ms ease-in-out; }
+.seal.clean { box-shadow: 0 0 0 3px var(--green-hi), 0 12px 24px -8px oklch(0 0 0 / 0.6); }
+.seal.clean b { color: oklch(0.8 0.13 150); }
+@media (prefers-reduced-motion: reduce) { .zzz { display: none; } }

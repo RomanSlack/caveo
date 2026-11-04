@@ -1,0 +1,13 @@
+{
+  "prompt": "The exact same simple cream felt padlock plush character from the reference image: same rounded padlock body, same short felt shackle loop on top, same single stitched seam, same stubby arms and feet, same soft studio lighting and tactile handmade toy photo look. Now cheering: both stubby arms raised high up in the air, eyes closed happily as two small upward arcs, big open happy smile, tiny hop with feet off the ground. Full body, centered, transparent background, no text, no extra characters.",
+  "model": "gpt-image-1.5",
+  "provider": "openai",
+  "size": "1024x1024",
+  "quality": "high",
+  "transparent": true,
+  "refs": [
+    "/tmp/latch3/ref.png"
+  ],
+  "filename": "latch3-cheer_0.png",
+  "generated_at": "2026-11-04T11:26:04"
+}

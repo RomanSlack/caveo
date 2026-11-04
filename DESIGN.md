@@ -9,7 +9,9 @@ Adjectives: tactile, playful, trustworthy, vivid, crafted. Essence: a hand-built
 ## Signature moves
 - **The Chamber**: a felt-lined containment box with hazard tape across the top and a glass glare. Blocked attempts
   are slapped on as red die-cut stickers; the "Sandbox destroyed" seal carries Latch in his STOP pose.
-- **Latch**: the felt airlock-guard mascot. Calm (keyhole shield) on the landing screen and in the tour bubble;
+- **Latch**: the felt airlock-guard mascot, with eight poses that swap with a squash-and-pop and each have their own loop:
+  point (landing, at the inbox), sleep (empty Chamber, floating Zs), carry (taking the file in), inspect (magnifier, checking),
+  alarm (STOP, quarantined), phone (hold: call the vendor; escalated), cheer (ready/approved, clean seal), calm (default). Calm (keyhole shield) on the landing screen and in the tour bubble;
   alarmed (STOP hand) when a sandbox is destroyed.
 - **The path**: every case carries one sticky 5-step track (Arrived, Sandboxed, Checked, Vaulted, Your call). Steps light
   green as the pipeline runs, turn red with a "!" when that step found trouble, and the current step pings in sky blue.
@@ -35,5 +37,6 @@ Tablet: chamber drops below. Phone: case first (hook), then inbox, then chamber.
 
 ## Changelog
 - 2026-11-03: initial "evidence ledger" system.
+- 2026-11-04: Latch got six new poses (latch3-*.webp) and a pose state machine.
 - 2026-11-04: added the path (linear 5-step process), numbered sections, vault row, next-email flow, 3-step landing.
 - 2026-11-03: replaced with "Craft Box" at Roman's request (Apple polish + 2000s tactile vibe).

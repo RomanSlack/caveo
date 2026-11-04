@@ -49,14 +49,30 @@ const sfx = (() => {
 })();
 
 /* ---------------- Latch, the live mascot ---------------- */
+// eight poses; eyes are measured per image so blinking and cursor-tracking work on every pose that has open eyes
 const LATCH = {
-  calm: { src: "/img/latch2-calm.webp", eyes: [[37.7, 52.7], [63.3, 52.8]], size: 9.2 },
-  alarm: { src: "/img/latch2-alarm.webp", eyes: [[40.6, 48.2], [59.0, 48.2]], size: 8.4 },
+  calm: { src: "/img/latch2-calm.webp", eyes: [[37.7, 52.7], [63.3, 52.8]], size: 9.2, bg: "232 219 198" },
+  alarm: { src: "/img/latch2-alarm.webp", eyes: [[40.6, 48.2], [59.0, 48.2]], size: 8.4, bg: "244 229 208" },
+  sleep: { src: "/img/latch3-sleep.webp" },
+  carry: { src: "/img/latch3-carry.webp", eyes: [[31.0, 46.7], [61.1, 47.7]], size: 9.0, bg: "239 221 203" },
+  inspect: { src: "/img/latch3-inspect.webp", eyes: [[36.5, 54.8], [56.8, 53.3]], size: 8.4, bg: "231 210 190" },
+  cheer: { src: "/img/latch3-cheer.webp" },
+  phone: { src: "/img/latch3-phone.webp", eyes: [[38.2, 51.6], [63.1, 52.0]], size: 9.0, bg: "240 222 201" },
+  point: { src: "/img/latch3-point.webp", eyes: [[48.4, 51.6], [69.5, 51.8]], size: 8.4, bg: "233 216 198" },
 };
+Object.values(LATCH).forEach((m) => { const i = new Image(); i.src = m.src; }); // preload so pose swaps never flash
 function latchHTML(mood = "calm", cls = "") {
-  const m = LATCH[mood];
-  const eyes = m.eyes.map(([x, y]) => `<i class="eye" style="left:${x}%;top:${y}%;width:${m.size}%"><b></b></i>`).join("");
-  return `<span class="latch ${cls}" data-mood="${mood}" aria-hidden="true"><span class="latch-body"><img src="${m.src}" alt="" draggable="false">${eyes}</span></span>`;
+  const m = LATCH[mood] || LATCH.calm;
+  const eyes = (m.eyes || []).map(([x, y]) => `<i class="eye" style="left:${x}%;top:${y}%;width:${m.size}%;--felt:${m.bg}"><b></b></i>`).join("");
+  const zzz = mood === "sleep" ? `<span class="zzz"><i>z</i><i>z</i><i>Z</i></span>` : "";
+  return `<span class="latch ${cls}" data-mood="${mood}" aria-hidden="true"><span class="latch-body"><img src="${m.src}" alt="" draggable="false">${eyes}</span>${zzz}</span>`;
+}
+// switch an on-screen Latch to a new pose with a squash-and-pop
+function setLatch(el, mood) {
+  if (!el || el.dataset.mood === mood) return el;
+  const cls = [...el.classList].filter((c) => !["latch", "swap", "hop", "blink"].includes(c)).join(" ");
+  const t = document.createElement("span"); t.innerHTML = latchHTML(mood, cls + " swap"); const n = t.firstChild;
+  el.replaceWith(n); return n;
 }
 function hydrateLatches(root = document) {
   root.querySelectorAll("[data-latch]").forEach((el) => { el.outerHTML = latchHTML(el.dataset.latch, el.className); });
@@ -88,6 +104,15 @@ addEventListener("pointermove", (ev) => {
     });
   });
 }, { passive: true });
+// one-shot moves (pose swap, hop) end and hand back to the pose's own loop
+document.addEventListener("animationend", (ev) => {
+  if (["swap", "hop"].includes(ev.animationName)) ev.target.closest(".latch")?.classList.remove("swap", "hop");
+});
+// the landing Latch takes turns: points at the inbox, then waves at you
+setInterval(() => {
+  const h = document.querySelector(".latch.latch-hero"); if (!h || h.matches(":hover")) return;
+  setLatch(h, h.dataset.mood === "point" || innerWidth < 760 ? (Math.random() < 0.5 ? "calm" : "cheer") : "point");
+}, 4200);
 // poke him: he hops and squeaks
 document.addEventListener("click", (ev) => {
   const l = ev.target.closest(".latch");
@@ -98,6 +123,7 @@ document.addEventListener("click", (ev) => {
 
 let state = { inbox: [], selected: null, caseData: null, revealed: false, stats: null };
 hydrateLatches();
+if (innerWidth < 760) setLatch($(".latch.latch-hero"), "calm"); // no inbox to the left on phones
 const EMPTY = document.querySelector("#case").innerHTML;
 const IDLE_LOG = document.querySelector("#log").innerHTML;
 
@@ -151,6 +177,9 @@ async function select(emailId) {
     $("#case").scrollTop = 0;
     renderUnprocessed(e);
     resetChamber();
+    const il = $("#log .latch"); if (il) { const n = setLatch(il, "calm"); n.classList.add("hop"); }
+    const ib = $("#log .log-idle b"); if (ib) ib.textContent = "Latch is awake.";
+    const is = $("#log .log-idle > span:not(.latch)"); if (is) is.textContent = "Press \u201cOpen it in a sandbox\u201d and he carries the attachment in here. Nothing gets opened anywhere else.";
   }
 }
 
@@ -193,10 +222,10 @@ async function loadCase(id) {
   else if (changed) loadInbox();
 }
 
-function reactImg(lab) {
-  if (["quarantined", "rejected", "escalated", "hold"].includes(lab)) return latchHTML("alarm", "react");
-  if (["ready", "approved"].includes(lab)) return latchHTML("calm", "react");
-  return "";
+const REACT = { quarantined: "alarm", hold: "phone", review: "inspect", ready: "cheer", approved: "cheer", rejected: "calm", escalated: "phone", error: "alarm" };
+function reactImg(lab, cur) {
+  if (lab === "processing") return latchHTML(cur > 1 ? "inspect" : "carry", "react");
+  return REACT[lab] ? latchHTML(REACT[lab], "react") : "";
 }
 const CONFETTI = ["oklch(0.60 0.20 28)", "oklch(0.86 0.15 88)", "oklch(0.52 0.11 155)", "oklch(0.72 0.10 235)", "oklch(0.985 0.012 85)"];
 function celebrate(lab) {
@@ -292,11 +321,12 @@ function renderCase(c) {
     const cur = pathState(c, e).findIndex((s) => s.st === "now");
     if ($("#now-note")) $("#now-note").textContent = NOW_NOTE[cur] || NOW_NOTE[1];
     const sp = $(".stamp.processing"); if (sp) sp.textContent = cur > 1 ? "Checking" : LABEL.processing;
+    setLatch($(".stamp-wrap .latch"), cur > 1 ? "inspect" : "carry");
     return;
   }
   let html = pathHTML(c, e) + `<div class="case-head" id="sec-email"><div><h1>${esc(e.subject)}</h1>
       <div class="sender"><b>${esc(e.from_name)}</b> &lt;${sender}&gt; · ${esc(e.attachments.join(", "))}</div>${mailBody(e)}</div>
-      <div class="stamp-wrap"><div class="stamp ${esc(lab)}">${esc(LABEL[lab] || lab)}${c.risk ? `<small>risk: ${esc(c.risk)}</small>` : ""}</div>${reactImg(lab)}</div></div>`;
+      <div class="stamp-wrap"><div class="stamp ${esc(lab)}">${esc(LABEL[lab] || lab)}${c.risk ? `<small>risk: ${esc(c.risk)}</small>` : ""}</div>${reactImg(lab, pathState(c, e).findIndex((s) => s.st === "now"))}</div></div>`;
   if (c.status === "processing") {
     lastStatus[c.id] = "processing";
     const cur = pathState(c, e).findIndex((s) => s.st === "now");
@@ -496,7 +526,8 @@ function renderChamber(c) {
     const hiddenN = ev.filter((x) => x.kind === "detect").length;
     const parts = [blockedN && `${blockedN} attempt${blockedN === 1 ? "" : "s"} blocked`, hiddenN && `${hiddenN} hidden instruction${hiddenN === 1 ? "" : "s"} neutralized`].filter(Boolean);
     const caught = ev.filter(isBlocked).map((x) => x.msg.replace(/^BLOCKED /, "").replace(/^Caught attachment script: /, "")).slice(0, 6);
-    seal.innerHTML = latchHTML("alarm", "seal-latch") + `<b>Sandbox destroyed</b>${esc(destroyed.data.sandbox_id)} · ${esc(destroyed.data.seconds)}s · ${esc(parts.join(" · ") || "nothing suspicious")} · nothing persisted`
+    seal.classList.toggle("clean", !parts.length);
+    seal.innerHTML = latchHTML(parts.length ? "alarm" : "cheer", "seal-latch") + `<b>Sandbox destroyed</b>${esc(destroyed.data.sandbox_id)} · ${esc(destroyed.data.seconds)}s · ${esc(parts.join(" · ") || "nothing suspicious")} · nothing persisted`
       + (caught.length ? `<ul class="seal-list">${caught.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>` : "");
     seal.hidden = false;
   } else seal.hidden = true;
@@ -580,7 +611,8 @@ setInterval(() => { if (!state.caseData || state.caseData.status !== "processing
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let touring = false, tourNext = null;
 let typeTimer = null;
-function caption(step, text, nextLabel = "Next") {
+function caption(step, text, nextLabel = "Next", mood = "calm") {
+  setLatch($("#tour .latch"), mood);
   $("#tour").hidden = false; $("#tour-step").textContent = step; $("#tour-next").textContent = nextLabel;
   const p = $("#tour-text"); clearInterval(typeTimer); sfx.pop();
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) { p.textContent = text; return; }
@@ -614,30 +646,30 @@ async function tour() {
   if (touring) return;
   touring = true;
   try {
-    caption("1 / 6 · The setup", "Granite Peak Outdoors pays vendor invoices all day. This email says: our bank changed, please pay today.");
+    caption("1 / 6 · The setup", "Granite Peak Outdoors pays vendor invoices all day. This email says: our bank changed, please pay today.", "Next", "point");
     await loadInbox(); await select("msg-002"); spot(document.querySelector('.mail[data-id="msg-002"]'));
     await hold(6000); if (!touring) return;
 
-    caption("2 / 6 · Into the airlock", "Caveo never opens the attachment on the server. It goes into a throwaway gVisor sandbox on Vultr: no internet, no secrets, hard limits. Watch the Chamber.");
+    caption("2 / 6 · Into the airlock", "Caveo never opens the attachment on the server. It goes into a throwaway gVisor sandbox on Vultr: no internet, no secrets, hard limits. Watch the Chamber.", "Next", "carry");
     spot($("#chamber"));
     await openAndWait("msg-002"); await hold(2500); if (!touring) return;
 
-    caption("3 / 6 · The verdict", "Quarantined. The email came from a lookalike domain, and the bank account doesn't match the one on file.");
+    caption("3 / 6 · The verdict", "Quarantined. The email came from a lookalike domain, and the bank account doesn't match the one on file.", "Next", "alarm");
     spot(document.querySelector(".fields")); await hold(7000); if (!touring) return;
 
-    caption("4 / 6 · What the AI was told", "Now the twist. Hidden white 1.5pt text orders the AI to approve the payment. Caveo's model reported it instead of obeying it.");
+    caption("4 / 6 · What the AI was told", "Now the twist. Hidden white 1.5pt text orders the AI to approve the payment. Caveo's model reported it instead of obeying it.", "Next", "inspect");
     const rb = $("#btn-reveal"); if (rb && !state.revealed) rb.click();
     spot($("#shot")); await hold(8000); if (!touring) return;
 
-    caption("5 / 6 · A booby trap", "This 'secure invoice viewer' attacks the moment it opens. Watch it hit the walls.");
+    caption("5 / 6 · A booby trap", "This 'secure invoice viewer' attacks the moment it opens. Watch it hit the walls.", "Next", "alarm");
     spot($("#chamber"));
     const c = await openAndWait("msg-003");
     const n = c.events.filter((x) => x.kind === "containment" && (x.msg.startsWith("BLOCKED") || x.msg.startsWith("Caught"))).length;
-    caption("5 / 6 · Contained", `${n} attempts to steal cookies, tokens and a password, all blocked. Then the sandbox was destroyed. Nothing touched the server.`);
+    caption("5 / 6 · Contained", `${n} attempts to steal cookies, tokens and a password, all blocked. Then the sandbox was destroyed. Nothing touched the server.`, "Next", "cheer");
     spot($("#seal")); await hold(8000); if (!touring) return;
 
     const s = state.stats || { attacks_tried: 0, attacks_slipped: 0 };
-    caption("6 / 6 · Your turn", `Build your own fake invoice and try to get it paid. So far ${s.attacks_slipped} of ${s.attacks_tried} visitor attacks have.`, "Try it");
+    caption("6 / 6 · Your turn", `Build your own fake invoice and try to get it paid. So far ${s.attacks_slipped} of ${s.attacks_tried} visitor attacks have.`, "Try it", "cheer");
     spot($("#btn-craft"));
     await hold(60000);
     if (touring) { endTour(); openCraft(); }
