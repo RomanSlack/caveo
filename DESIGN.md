@@ -18,8 +18,10 @@ Adjectives: tactile, playful, trustworthy, vivid, crafted. Essence: a hand-built
   Case sections carry the same numbers, and a finished case always offers "Next email" so the flow never dead-ends.
 - **The guide**: on first visit Latch hops out of the hero and walks you through ONE email (the booby-trapped Summit
   "secure viewer", pinned to the top of the inbox because it lights up the Chamber the most), one real click at a time,
-  then stops for good. A stitched yellow ring marks the next thing to press; the page is never dimmed and never
-  auto-scrolled. If the target is off screen the note docks with "Show me", which scrolls to it.
+  then stops for good. It joins on your first click (the landing explains itself, and the hero Latch never vanishes).
+  A stitched yellow ring marks the next thing to press; the page is never dimmed and never auto-scrolled. The note
+  appears in place at each step (never slides across the screen) and is placed so it never covers another Latch or
+  the Chamber. If the target is off screen the note docks with "Show me", which scrolls to it.
 - **Latch never moves the page**: in-flow spots (hero, Chamber idle, verdict react) are fixed boxes sized to the tallest
   pose they show, and Latch stands on the floor of the box, so pose swaps cannot shift layout.
 - **Verdict stickers**: rotated, white die-cut border, slap-on spring animation.
@@ -45,6 +47,7 @@ Tablet: chamber drops below. Phone: case first (hook), then inbox, then chamber.
 - 2026-11-03: initial "evidence ledger" system.
 - 2026-11-04: interactive guide (spotlight + Latch note), first visit only, restart with "Start with the first email".
 - 2026-11-04: guide covers the first email only, starts on the booby-trap invoice, no dimming, no auto-scroll, Show me fixed; fixed-box Latch spots stop pose swaps from shifting layout.
+- 2026-11-04: guide starts on the first click, appears in place instead of flying in, keeps clear of other Latches; gentler pose swaps; re-rendering the same case no longer replays entrance animations.
 - 2026-11-04: Latch got six new poses (latch3-*.webp) and a pose state machine.
 - 2026-11-04: added the path (linear 5-step process), numbered sections, vault row, next-email flow, 3-step landing.
 - 2026-11-03: replaced with "Craft Box" at Roman's request (Apple polish + 2000s tactile vibe).

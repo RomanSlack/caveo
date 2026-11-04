@@ -595,7 +595,7 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
 }
 
 /* ---------- Latch poses: each one moves differently ---------- */
-@keyframes swap { 0% { transform: scale(1.18, 0.7); opacity: 0.4; } 55% { transform: scale(0.94, 1.08); opacity: 1; } 100% { transform: none; } }
+@keyframes swap { 0% { transform: scale(1.05, 0.95); } 100% { transform: none; } }
 .latch[data-mood="sleep"] .latch-body { animation: snooze 4.2s ease-in-out infinite; }
 @keyframes snooze { 50% { transform: scale(1.04, 0.95) rotate(-2deg); } }
 .zzz { position: absolute; right: 2%; top: 0; width: 30%; height: 40%; pointer-events: none; }
@@ -614,7 +614,7 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
 @keyframes nod { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(3deg) translateY(1%); } 40% { transform: rotate(0); } 60% { transform: rotate(3deg) translateY(1%); } }
 .latch[data-mood="point"] .latch-body { animation: pointing 1.4s ease-in-out infinite; }
 @keyframes pointing { 0%, 100% { transform: translateX(0) rotate(0); } 50% { transform: translateX(-4%) rotate(-3deg); } }
-.latch.swap.swap .latch-body { animation: swap 420ms var(--spring) both; }
+.latch.swap.swap .latch-body { animation: swap 260ms var(--ease) both; }
 .latch.hop.hop .latch-body { animation: hop 620ms var(--spring); }
 .latch:hover .latch-body { animation: wave 700ms ease-in-out; }
 .seal.clean { box-shadow: 0 0 0 3px var(--green-hi), 0 12px 24px -8px oklch(0 0 0 / 0.6); }
@@ -624,12 +624,13 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
 /* ---------- guide: Latch hops to the next thing to click, holding a paper note ---------- */
 .guide-hole { position: fixed; z-index: 40; pointer-events: none; border-radius: 18px; border: 3px dashed oklch(0.99 0.02 85);
   box-shadow: 0 0 0 4px var(--sun), 0 6px 22px oklch(0.6 0.15 85 / 0.45);
-  transition: left 420ms var(--spring), top 420ms var(--spring), width 420ms var(--spring), height 420ms var(--spring);
   animation: holepulse 1.8s ease-in-out infinite; }
+.guide-hole.fresh { animation: holein 360ms var(--spring) both, holepulse 1.8s ease-in-out 360ms infinite; }
+@keyframes holein { from { opacity: 0; scale: 1.12; } }
 @keyframes holepulse { 50% { border-color: var(--sun); } }
-.guide { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; transition: transform 520ms var(--spring); }
+.guide { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; }
 .guide.hopping { animation: guidein 520ms var(--spring) both; }
-@keyframes guidein { from { opacity: 0; scale: 0.6; } }
+@keyframes guidein { from { opacity: 0; scale: 0.85; } }
 .guide-card { pointer-events: auto; position: relative; margin-left: 58px; padding: 14px 16px 10px 54px; border-radius: 18px; background: var(--paper);
   box-shadow: var(--lift-hi), 0 0 0 3px white; transform: rotate(-1deg); }
 .guide-card::before { content: ""; position: absolute; top: -9px; left: 46%; width: 60px; height: 18px; transform: rotate(3deg);
@@ -644,9 +645,7 @@ ol.tl .amt { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; }
   .guide-latch { width: 84px; }
   .guide-card b { font-size: 17px; }
 }
-@media (prefers-reduced-motion: reduce) { .guide, .guide-hole { transition: none; } }
-.latch-hero { transition: opacity var(--d-med) var(--ease), transform var(--d-med) var(--spring); }
-body.guiding .latch-hero { opacity: 0; visibility: hidden; transform: scale(0.6); } /* he hopped out to guide you */
+@media (prefers-reduced-motion: reduce) { .guide.hopping, .guide-hole.fresh { animation: none; } }
 .guide-acts { display: flex; align-items: center; gap: 12px; }
 .guide.docked .guide-card { transform: rotate(0); }
 
@@ -656,3 +655,6 @@ body.guiding .latch-hero { opacity: 0; visibility: hidden; transform: scale(0.6)
 .react { aspect-ratio: 520 / 695; }
 .latch-hero .latch-body, .idle-latch .latch-body, .react .latch-body { position: absolute; left: 0; right: 0; bottom: 0; }
 #guide-show[hidden] { display: none; }
+
+/* same case re-rendered (sandbox finished, decision made): what was already on screen stays put */
+.case.again .react, .case.again .path li:not(.now) .dot { animation: none; }

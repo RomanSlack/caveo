@@ -112,7 +112,7 @@ document.addEventListener("animationend", (ev) => {
 setInterval(() => {
   const h = document.querySelector(".latch.latch-hero"); if (!h || h.matches(":hover") || document.body.classList.contains("guiding")) return;
   setLatch(h, h.dataset.mood === "point" || innerWidth < 760 ? (Math.random() < 0.5 ? "calm" : "cheer") : "point");
-}, 4200);
+}, 7000);
 // poke him: he hops and squeaks
 document.addEventListener("click", (ev) => {
   const l = ev.target.closest(".latch");
@@ -188,6 +188,7 @@ async function select(emailId) {
 }
 
 function renderUnprocessed(e) {
+  $("#case").dataset.shown = ""; $("#case").classList.remove("again");
   $("#case").innerHTML = pathHTML(null, e) + `
     <div class="case-head" id="sec-email"><div><h1>${esc(e.subject)}</h1>
       <div class="sender"><b>${esc(e.from_name)}</b> &lt;${esc(e.from_email)}&gt; · ${esc(e.attachments.join(", "))}</div></div></div>
@@ -328,6 +329,7 @@ function renderCase(c) {
     setLatch($(".stamp-wrap .latch"), cur > 1 ? "inspect" : "carry");
     return;
   }
+  const cs = $("#case"); cs.classList.toggle("again", cs.dataset.shown === c.id); cs.dataset.shown = c.id;
   let html = pathHTML(c, e) + `<div class="case-head" id="sec-email"><div><h1>${esc(e.subject)}</h1>
       <div class="sender"><b>${esc(e.from_name)}</b> &lt;${sender}&gt; · ${esc(e.attachments.join(", "))}</div>${mailBody(e)}</div>
       <div class="stamp-wrap"><div class="stamp ${esc(lab)}">${esc(LABEL[lab] || lab)}${c.risk ? `<small>risk: ${esc(c.risk)}</small>` : ""}</div>${reactImg(lab, pathState(c, e).findIndex((s) => s.st === "now"))}</div></div>`;
@@ -601,6 +603,7 @@ $("#btn-reset").addEventListener("click", async () => {
   if (!confirm("Clear all cases and start the demo over?")) return;
   await api("/api/reset", { method: "POST" });
   state.selected = null; state.caseData = null;
+  $("#case").dataset.shown = ""; $("#case").classList.remove("again");
   $("#case").innerHTML = EMPTY;
   resetChamber(); loadInbox(); loadStats();
 });
@@ -754,21 +757,17 @@ function guideStep() {
   const c = state.caseData, sel = state.selected;
   if (sel && !guide.email) guide.email = sel; // the guide covers this one email, then gets out of the way
   if (sel && sel !== guide.email) { stopGuide(); return null; }
-  if (!sel) {
-    if ($(".act")) return null; // Activity view: leave them be
-    const m = $(".mail.start") || document.querySelector(".mail");
-    return m && { k: "pick", el: m, mood: "point", n: 1, t: "Start with this one", p: "A \"secure invoice viewer\" that is really a booby trap. Clicking it just shows you the email, nothing opens yet." };
-  }
-  if (!c) { const b = $("#btn-run"); return b && { k: "run", el: b, mood: "carry", n: 2, t: "Open it in a sandbox", p: "Press the green button. I carry the attachment into a sealed box on Vultr with no internet and no secrets." }; }
+  if (!sel) return null; // the landing explains itself; the guide joins on your first click
+  if (!c) { const b = $("#btn-run"); return b && { k: "run", el: b, mood: "carry", n: 1, t: "Open it in a sandbox", p: "Press the green button. I carry the attachment into a sealed box on Vultr with no internet and no secrets." }; }
   if (c.status === "processing" || logDraining || logQueue.length)
-    return { k: "watch", el: innerWidth >= 760 ? $("#chamber") : $("#path"), mood: "inspect", n: 3, t: "Watch the Chamber", p: "This one attacks the moment it opens. Every grab for cookies, passwords or the internet hits a wall and gets a red sticker. Then the box is destroyed." };
+    return { k: "watch", el: $("#chamber"), mood: "inspect", n: 2, t: "Watch the Chamber", p: "This one attacks the moment it opens. Every grab for cookies, passwords or the internet hits a wall and gets a red sticker. Then the box is destroyed." };
   if (c.status === "awaiting_human") {
     const rb = $("#btn-reveal");
-    if (rb && !state.revealed) return { k: "reveal", el: rb, mood: "alarm", n: 4, t: "Something is hidden", p: "This invoice has text you can't see. Press Reveal to read what it tells the AI." };
+    if (rb && !state.revealed) return { k: "reveal", el: rb, mood: "alarm", n: "Look", t: "Something is hidden", p: "This invoice has text you can't see. Press Reveal to read what it tells the AI." };
     const d = $("#sec-decide");
     const say = { quarantined: "Payment is blocked. Reject it, or send it to security.", hold: "Call the vendor on the number in your records first, then tick the box.",
       review: "Something looks off. Read the red flags, then decide.", ready: "Every check passed. A person still approves it. The AI never pays." }[c.decision];
-    return d && { k: "decide-" + c.id, el: d.querySelector(".btn.primary") || d, mood: c.decision === "ready" ? "cheer" : c.decision === "hold" ? "phone" : "calm", n: 5, t: "Your call", p: say };
+    return d && { k: "decide-" + c.id, el: d.querySelector(".btn.primary") || d, mood: c.decision === "ready" ? "cheer" : c.decision === "hold" ? "phone" : "calm", n: 3, t: "Your call", p: say };
   }
   const nx = $("[data-next], [data-activity]");
   return nx && { k: "next", el: nx, mood: "cheer", n: "✓", t: "That's the whole loop", p: "The rest of the inbox is yours. Or build your own fake invoice with Craft an attack and try to get it paid.", end: true };
@@ -786,8 +785,9 @@ function placeGuide(s) {
   const gw = Math.min(330, innerWidth - 24), gh = g.offsetHeight || 150, gap = 16;
   let x, y;
   if (innerWidth < 760) { x = (innerWidth - gw) / 2; y = r.bottom + gap + gh < innerHeight ? r.bottom + gap : Math.max(12, r.top - gap - gh); }
+  else if (/^(decide|next)/.test(s.k) && r.top - gap - gh > 76) { x = r.right - gw; y = r.top - gap - gh; } // above the buttons, never over the Chamber
   else if (r.right + gap + gw < innerWidth - 8 && !big) { x = r.right + gap; y = r.top + r.height / 2 - gh / 2; }
-  else if (r.left - gap - gw > 8) { x = r.left - gap - gw; y = big ? r.top + 120 : r.top + r.height / 2 - gh / 2; }
+  else if (r.left - gap - gw > 8) { x = r.left - gap - gw; y = big ? r.bottom - gh - 40 : r.top + r.height / 2 - gh / 2; } // big target: low, clear of the case header
   else { x = r.left + r.width / 2 - gw / 2; y = r.top - gap - gh > 70 ? r.top - gap - gh : r.bottom + gap; }
   x = Math.max(12, Math.min(x, innerWidth - gw - 12)); y = Math.max(76, Math.min(y, innerHeight - gh - 12));
   g.style.width = gw + "px"; g.style.transform = `translate(${x}px, ${y}px)`;
@@ -795,16 +795,17 @@ function placeGuide(s) {
 function guideTick() {
   const g = $("#guide");
   const s = guide.on ? guideStep() : null;
-  if (s && s.k === "pick") { const r = s.el.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) s.el = null; } // phones: don't yank them off the intro
   document.body.classList.toggle("guiding", !!(s && s.el));
   if (!s || !s.el) { g.hidden = true; $("#guide-hole").hidden = true; guide.key = ""; return; }
   if (s.k !== guide.key) {
     guide.key = s.k;
     const was = g.hidden; g.hidden = false;
-    $("#guide-step").textContent = typeof s.n === "number" ? `Step ${s.n} of 5` : "Nice";
+    $("#guide-step").textContent = typeof s.n === "number" ? `Step ${s.n} of 3` : s.n === "Look" ? "Look closer" : "Nice";
     $("#guide-title").textContent = s.t; $("#guide-text").textContent = s.p;
     setLatch($("#guide .latch"), s.mood);
-    g.classList.remove("hopping"); void g.offsetWidth; if (!was) g.classList.add("hopping");
+    // appear in place at each new spot (never slide across the screen)
+    const hole = $("#guide-hole");
+    g.classList.remove("hopping"); hole.classList.remove("fresh"); void g.offsetWidth; g.classList.add("hopping"); hole.classList.add("fresh");
     if (typeof sfx !== "undefined" && !was) sfx.pop();
     if (s.end) { localStorage.setItem(GUIDE_DONE, "1"); }
   }
@@ -817,4 +818,4 @@ $("#guide-show").addEventListener("click", () => { const st = guideStep(); if (s
 setInterval(guideTick, 300);
 addEventListener("resize", guideTick); addEventListener("scroll", guideTick, { passive: true, capture: true });
 document.addEventListener("click", (ev) => { if (ev.target.closest("[data-start]") && !localStorage.getItem(GUIDE_DONE)) startGuide(); if (ev.target.closest("[data-tour]")) guide.on = false; });
-if (!localStorage.getItem(GUIDE_DONE) && location.hash !== "#tour" && !window.__tourManual) setTimeout(startGuide, 1400);
+if (!localStorage.getItem(GUIDE_DONE) && location.hash !== "#tour" && !window.__tourManual) guide.on = true; // waits for the first email you pick
