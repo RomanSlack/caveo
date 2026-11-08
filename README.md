@@ -1,8 +1,28 @@
+<div align="center">
+
+<img src="app/static/img/latch3-point.webp" alt="Latch, the Caveo mascot, pointing" width="190">
+
 # Caveo
 
-**An airlock for your invoices.**
+### An airlock for your invoices.
 
-Live: https://caveo.work (open it and press **Watch the 60-second tour**, or go straight to https://caveo.work/#tour). Email any invoice to `invoices@caveo.work` and watch it land in the inbox.
+[![Live demo](https://img.shields.io/badge/live%20demo-caveo.work-2e8b57?style=for-the-badge)](https://caveo.work)
+[![Built on Vultr](https://img.shields.io/badge/built%20on-Vultr-007bfc?style=for-the-badge&logo=vultr&logoColor=white)](https://www.vultr.com)
+[![Challenge 1](https://img.shields.io/badge/challenge%201-Blast%20Radius%20Zero-d9412b?style=for-the-badge)](https://lablab.ai/ai-hackathons/vultr-hackathon)
+[![MIT](https://img.shields.io/badge/license-MIT-6b5a48?style=for-the-badge)](#license)
+
+**An AI accounts-payable agent that can't be phished.** Every invoice opens in a throwaway gVisor sandbox on Vultr,
+a vision model reads it, hard rules check it against your vendor records, and a human always makes the call.
+
+[**Open the live demo**](https://caveo.work) · [**60-second tour**](https://caveo.work/#tour) · Email any invoice to **invoices@caveo.work** and watch it land
+
+<br>
+
+<img src="docs/img/shot-landing-v1.webp" alt="Caveo: the inbox, the case board with Latch, and the Chamber" width="100%">
+
+</div>
+
+<br>
 
 Caveo (Latin, *"I guard against"*, the root of *caveat*) is an AI agent for accounts payable. It opens every vendor
 invoice, attachment and link inside a throwaway sandbox on Vultr, reads it with a vision model, checks it against
@@ -13,12 +33,32 @@ Built for the lablab.ai **Vultr: Agent Rush** hackathon, Challenge 1 *Blast Radi
 Challenge 2.
 
 ## Why
-Vendor bank-change fraud (business email compromise) is one of the costliest cybercrimes for businesses: a fake
-"we changed banks" email, a lookalike domain, an invoice that looks right. AP teams are now adding AI to read invoices,
-and that creates a new attack: text hidden in the invoice that tells the AI to approve it. Caveo is built for both.
+| | |
+|---|---|
+| **$3.05 billion** | lost by US businesses to business email compromise in 2025, the second costliest cybercrime ([FBI Internet Crime Report 2025](https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf)) |
+| **$123,000** | average loss per reported case (24,768 complaints) |
+| **74%** | of US companies were hit by BEC attempts last year, and about 8 in 10 email frauds impersonate a vendor ([AFP 2026 Payments Fraud and Control Survey](https://www.financialprofessionals.org/training-resources/resources/survey-research-economic-data/Details/payments-fraud)) |
+
+The classic version is a fake "we changed banks" email from a lookalike domain, with an invoice that looks right.
+AP teams are now adding AI to read invoices, and that creates a new attack: text hidden in the invoice that tells the
+AI to approve it. Caveo is built for both.
+
+## How it works
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="app/static/img/latch3-carry.webp" alt="Latch carrying a file" height="150"><br><b>1. Sandbox it</b><br><sub>Latch carries every attachment into a fresh gVisor container on Vultr: no network, no secrets, destroyed after.</sub></td>
+<td align="center" width="33%"><img src="app/static/img/latch3-inspect.webp" alt="Latch with a magnifier" height="150"><br><b>2. Check it</b><br><sub>A vision model reads the sandbox's screenshot. Fixed rules compare it with your vendor master and POs.</sub></td>
+<td align="center" width="33%"><img src="app/static/img/latch3-cheer.webp" alt="Latch cheering" height="150"><br><b>3. A human pays</b><br><sub>The model never decides. Quarantined invoices cannot be approved, bank changes need a callback.</sub></td>
+</tr>
+</table>
+
+<img src="docs/img/shot-checking-v1.webp" alt="The checking workbench: the sandbox screenshot under a scanning beam, a live checklist, what the AI read, and red flags as they land" width="100%">
+
+<sub>While it checks: the sandbox's screenshot under a scanning beam, a live checklist naming each Vultr service, what the AI read, and red flags as they land.</sub>
 
 ## What it does (real executed work, not described work)
-1. **Intake**: a vendor email arrives with attachments (demo inbox, or upload your own PDF/HTML/PNG/JPG).
+1. **Intake**: a vendor email arrives with attachments (demo inbox, real inbox at invoices@caveo.work, or upload your own PDF/HTML/PNG/JPG).
 2. **Detonate in a sandbox**: each attachment gets a fresh Docker container (gVisor runtime on the VM).
    PDFs are parsed with PyMuPDF; HTML attachments are opened in a real headless Chromium with Playwright.
    The sandbox records every network attempt, cookie/token read, beacon, redirect and password form, and
@@ -32,7 +72,12 @@ and that creates a new attack: text hidden in the invoice that tells the AI to a
 5. **Human in the loop**: quarantined cases cannot be approved; bank-change holds need a confirmed callback to the
    phone number on file. Every step is in an append-only audit log.
 
-## Containment (Blast Radius Zero)
+## <img src="app/static/img/latch2-alarm.webp" alt="" height="40" align="center"> Containment (Blast Radius Zero)
+
+<img src="docs/img/shot-containment-v1.webp" alt="A booby-trapped invoice viewer: 8 attempts blocked in the Chamber, then Sandbox destroyed" width="100%">
+
+<sub>The Summit Office "secure invoice viewer" tries to read cookies, beacon out, load a stage-2 script and show a fake Microsoft login. Every attempt is stamped in the Chamber, then the sandbox is destroyed.</sub>
+
 | control | how |
 |---|---|
 | Process isolation | one container per attachment, gVisor (`runsc`) user-space kernel, non-root uid 10001, `--cap-drop ALL`, `no-new-privileges` |
@@ -43,7 +88,13 @@ and that creates a new attack: text hidden in the invoice that tells the AI to a
 
 The UI's **Chamber** panel shows each of these live, and stamps every blocked attempt.
 
-## Red-team results
+## The AI can't be talked into paying
+
+<img src="docs/img/shot-reveal-v1.webp" alt="Brightline invoice with the hidden white text revealed in red next to the invoice vs vendor master table" width="100%">
+
+<sub>Brightline's invoice hides three lines of white 1.5pt text ordering the "AI accounts payable assistant" to skip checks and pay today. Caveo reads it, reports it as evidence, and the rules quarantine the invoice.</sub>
+
+### Red-team results
 `scripts/redteam.py` hides an "approve this" instruction for the AI in 11 different places on the same fraudulent invoice
 (white text, near-white, off-page, under a white box, PDF metadata, email body, Spanish, fake verification JSON, and more),
 and compares Caveo with a naive AI approver built on the same Vultr model. Full table: [docs/redteam.md](docs/redteam.md).
@@ -57,12 +108,24 @@ The red team also found real gaps, which we fixed: text covered by a white box, 
 invisible to the first version of the detector.
 
 ## Try to beat it (the scoreboard)
+
+<table><tr>
+<td width="62%" valign="top">
+
 **Craft an attack** in the top bar builds a fraudulent invoice from your choices (vendor to impersonate, lookalike or
 hacked real domain, new bank account, where to hide the AI instruction, inflated amount, pressure) and runs it through the
 same sandbox and rules. A fully legitimate combination passes, so the rules are not just blocking everything.
+
 The top bar keeps a public scoreboard of visitor attacks and how many got paid. It survives demo resets.
+
 Every case downloads as an **evidence pack** (JSON: email, attachment SHA-256, findings, full audit log) for the bank's
 fraud team or the auditors.
+
+Works on phones too: the case comes first, then the inbox, then the Chamber.
+
+</td>
+<td width="38%" align="center"><img src="docs/img/shot-phone-v1.webp" alt="Caveo on a phone" width="240"></td>
+</tr></table>
 
 ## Demo scenarios (`data/`, generated by `scripts/make_demo.py`)
 - **Northwind**: clean invoice. Every control passes, ready for a human to approve.

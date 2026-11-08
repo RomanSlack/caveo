@@ -9,7 +9,7 @@ Caveo: an airlock for your invoices
 Caveo is an AI accounts-payable agent that can't be phished. Every invoice opens in a throwaway gVisor sandbox on Vultr, a vision model reads it, hard rules check it against your vendor records, and a human always makes the call.
 
 ## Long description
-Fake "we changed banks" invoices cost US businesses billions a year. Now finance teams are adding AI to read invoices, which opens a new attack: hidden text in the PDF that tells the AI to approve the payment. Caveo is built for both.
+Business email compromise, led by fake "we changed banks" invoices, cost US businesses $3.05 billion in 2025, about $123,000 per case (FBI Internet Crime Report 2025), and 74% of companies were targeted last year (AFP 2026). Now finance teams are adding AI to read invoices, which opens a new attack: hidden text in the PDF that tells the AI to approve the payment. Caveo is built for both.
 
 **How it works**
 1. A vendor email lands in the inbox. It is a real one: anyone can email invoices@caveo.work and watch it arrive in seconds.
