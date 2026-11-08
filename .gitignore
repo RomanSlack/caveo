@@ -12,3 +12,4 @@ pitch/*.mp4
 video/node_modules/
 video/out/
 video/public/live/
+video/build/

@@ -71,3 +71,29 @@ Each section opens with a 1.5 second MOTION title card (number sticker slaps on,
 4. Have the Brightline PDF on your phone (`data/attachments/Brightline_INV-B-5530.pdf`).
 5. Click **Hide the guide** on the first note if you want a clean screen (or leave it, it shows the product is easy).
 6. Record your Act 1 and Act 3 lines separately as audio (same mic), with a pause between lines. Send both files to Claude.
+
+## Remotion build (what `video/` renders today)
+
+Mapped to the 14 lines of `video/script.html`. Each line has a named length in `LINES` (`src/theme.ts`); the estimates
+give 3165 frames = 1:45.5 at 30 fps. Re-sync by setting each `LINES.lN` to that line's real length in Roman's take.
+
+| segment | script lines | picture | Roman |
+|---|---|---|---|
+| hook | 1-4 | fake email, $3 billion then $123,000 (FBI receipt), invoice with hidden white text, Latch + Caveo | full size, left panel |
+| flow | 5-6 | inbox, new Summit email, click, flies into the Chamber, doors seal (line 5); 6 BLOCKED stickers, "Computer wiped" (line 6) | springs into the bottom-left box |
+| summit | 7 | live clip `public/live/app-summit.mp4` | box |
+| brightline | 8-9 | live clip `public/live/app-brightline.mp4` (Look closer) | box |
+| inbox | 10 | live clip `public/live/app-inbox.mp4` | box |
+| craft | 11 | live clip `public/live/app-craft.mp4` | box |
+| arch | 12-13 | everything on Vultr (diagram), then the red-team score | box |
+| end | 14 | 0 fake invoices paid, caveo.work, Built on Vultr | grows back to full size |
+
+Inputs (drop into `video/public/live/`, gitignored): `face.mp4` (one webcam take, picture and narration, the master
+clock; `FACE_OFFSET` trims its start), optional `face-matte.webm` (same take, background removed), and the four
+Playwright clips above (each played from its first frame, framed at 1380x862 right of Roman's box; capture at 16:10 and
+at least as long as its segment). Missing files show labeled placeholders.
+
+On-screen copy is plain words (no "AP", "BEC", "vendor master"); Vultr product and model names appear only as small
+sublines. Section cards and the verdict card still exist as standalone compositions but are not in the film.
+
+Music bed: "Upbeat Summer EDM (Pool Party)" by Infraction, No Copyright Music, at 10% under lines 1-6 and 12-14 only.
