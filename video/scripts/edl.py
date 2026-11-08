@@ -11,7 +11,9 @@ LINES = [
  (5, 53.10, 64.30), (6, 66.00, 77.20), (7, 77.95, 80.10), (8, 81.00, 90.80), (9, 92.20, 101.90),
  (10, 103.70, 111.80), (11, 113.05, 119.15), (12, 120.80, 132.95), (13, 133.80, 142.50), (14, 143.55, 147.15),
 ]
-MAXGAP, PAD, TAIL = 0.38, 0.08, 0.2   # keep pauses up to 0.22s; trim longer ones
+MAXGAP, PAD, TAIL = 0.38, 0.08, 0.2
+INTRO = {1, 2, 3, 4}  # Roman: intro lines felt clipped; give them longer tails and snap cuts to word ends
+WORDS = json.load(open('final1.json'))   # keep pauses up to 0.22s; trim longer ones
 segs = []
 for line, s, e in LINES:
     fs, fe = int(s*100), int(e*100)
@@ -25,7 +27,12 @@ for line, s, e in LINES:
         prev = i
     chunks.append((start, prev))
     for c0, c1 in chunks:
-        a0 = max(s, (fs+c0)/100 - PAD); a1 = min(e, (fs+c1+1)/100 + TAIL)
+        a0 = max(s, (fs+c0)/100 - PAD); a1 = min(e, (fs+c1+1)/100 + (0.34 if line in INTRO else TAIL))
+        if line in INTRO:
+            # never end inside or right after a word: extend to the recognizer's word end + 0.18s
+            for w in WORDS:
+                if w['start'] < a1 and w['end'] + 0.18 > a1 and w['end'] <= e: a1 = min(e, max(a1, w['end'] + 0.18))
+            a0 = max(s, a0 - 0.04)
         if a1 - a0 < 0.12: continue
         segs.append({'line': line, 's': round(a0, 3), 'e': round(a1, 3)})
 json.dump(segs, open('edl.json', 'w'), indent=1)

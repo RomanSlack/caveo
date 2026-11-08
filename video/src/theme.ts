@@ -40,10 +40,10 @@ export const HEIGHT = 1080;
 // Narration lines (video/script.html, 14 lines). Frames @30fps, measured from Roman's cut take (build/edl.json).
 // Re-sync: set each to the real length of that line in Roman's take (face.mp4); everything below follows.
 export const LINES = {
-  l1: 247, // face full: "If your business pays bills ... pay this new account."
-  l2: 266, // the numbers: $3 billion, then $123,000 per hit
-  l3: 259, // the new twist: AI reads invoices, hidden white text
-  l4: 113, // the solution: "So I built Caveo ... an airlock for your invoices."
+  l1: 268, // face full: "If your business pays bills ... pay this new account."
+  l2: 289, // the numbers: $3 billion, then $123,000 per hit
+  l3: 308, // the new twist: AI reads invoices, hidden white text
+  l4: 123, // the solution: "So I built Caveo ... an airlock for your invoices."
   l5: 299, // how it works: invoice comes in, carried into the sealed computer
   l6: 282, // the chamber: blocks, then the computer gets wiped
   l7: 59, // live app (Summit)
@@ -81,8 +81,8 @@ export const segStart = (id: string) => {
 export const TOTAL_FRAMES = SEGMENTS.reduce((a, s) => a + s.frames, 0); // 3165 = 1:45.5 with the estimates above
 
 // Beats inside scenes (local frames), derived from the line lengths.
-// "$3 billion ... last year" holds until Roman says "About" (13.32s in narration = 153 frames into line 2).
-const half = Math.min(153, L.l2 - 30);
+// "$3 billion ... last year" holds until Roman says "About" (166 frames into line 2 in the v3 cut).
+const half = Math.min(166, L.l2 - 30);
 export const HOOK = {
   email: [0, L.l1],
   billions: [L.l1, L.l1 + half],
