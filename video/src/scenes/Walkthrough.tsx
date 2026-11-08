@@ -29,13 +29,18 @@ const CH_W = 840;
 const CH_H = 900;
 const ROOM = {x: 30, y: 130, w: CH_W - 60, h: 640}; // relative to chamber
 
-// Beat frames, local to the scene. Line 5 (T) carries the invoice in; line 6 (S, offsets from the start of line 6) is the chamber.
-const T = {newMail: 8, cursor: 40, click: 70, lift: 80, doorsOpen: 90, land: 125, drop: 130, doorsShut: 140, glass: LINES.l5 - 15};
+// Beat frames, word-locked to Roman's take (build/narr_words.json). Line 5 starts at 29.50s, line 6 at 39.47s.
+// Line 5: "An invoice comes in" 0.2s, "Instead of opening it on your computer" 1.5s, "Caveo opens it inside a sealed
+// throwaway computer" 3.5s, "on Vultr" 6.6s, "No internet" 7.2s, "no passwords" 8.1s, "nothing to steal" 9.2s.
+const T = {newMail: 6, cursor: 40, click: 76, lift: 100, doorsOpen: 102, land: 128, drop: 132, doorsShut: 144, vultr: 196, glass: LINES.l5 + 2};
+const NO_AT = [214, 242, 274]; // No internet / no passwords / nothing to steal
 const L6 = LINES.l5;
-// "steal your logins" (2), "sneak data out" (2), "fake Microsoft sign-in page" (2), then "gets wiped".
-const STICK_AT = [95, 110, 125, 140, 185, 200].map((x) => L6 + x);
-const ALARM_AT = L6 + 95;
-const WIPED_AT = L6 + 275;
+// Line 6: "Then it watches" 0.1s, "steal your logins" 1.7s, "sneak data out" 2.9s, "fake Microsoft sign-in page" 4.6s,
+// "All blocked" 6.2s, "gets wiped" 8.9s.
+const WATCH_AT = L6 + 4;
+const STICK_AT = [50, 86, 136].map((x) => L6 + x);
+const ALL_AT = L6 + 184;
+const WIPED_AT = L6 + 262;
 
 const Avatar: React.FC<{name: string; color: string; size?: number}> = ({name, color, size = 56}) => (
   <div style={{width: size, height: size, borderRadius: '50%', background: color, color: '#fff', display: 'grid', placeItems: 'center', fontFamily: F.display, fontWeight: 700, fontSize: size * 0.48, flexShrink: 0}}>
@@ -60,14 +65,8 @@ const Cursor: React.FC<{x: number; y: number; press: number}> = ({x, y, press}) 
   </svg>
 );
 
-const STICKERS = [
-  'BLOCKED: steal your logins',
-  'BLOCKED: grab a sign-in token',
-  'BLOCKED: sneak data to summit-office-billing.top',
-  'BLOCKED: download more malware',
-  'BLOCKED: fake Microsoft sign-in page',
-  'BLOCKED: send you to a scam site',
-];
+const STICKERS = ['Steal your logins', 'Sneak data out', 'Fake sign-in page'];
+const NOS = ['No internet', 'No passwords', 'Nothing to steal'];
 
 const InboxAndChamber: React.FC = () => {
   const f = useCurrentFrame();
@@ -95,8 +94,12 @@ const InboxAndChamber: React.FC = () => {
   const doorOpen = open * (1 - shut);
   const glass = interpolate(f, [T.glass, T.glass + 10], [1, 0.12], clamp);
   const sealed = useIn(T.doorsShut + 6, 8, Easing.out(Easing.back(2)));
+  const wipe = interpolate(f, [WIPED_AT - 4, WIPED_AT + 6], [0, 1], {...clamp, easing: Easing.in(Easing.cubic)});
+  const stage = interpolate(f, [T.land + 4, T.land + 24], [0, 1], {...clamp, easing: Easing.inOut(Easing.cubic)});
+  const nosOut = interpolate(f, [T.glass, T.glass + 8], [1, 0], clamp);
+  const scan = interpolate(f, [WATCH_AT, WATCH_AT + 45], [0, 1], {...clamp, extrapolateRight: 'extend'}) % 1;
   // Impacts: door slam, each sticker, the destroyed seal.
-  const hits = [T.doorsShut + 5, ...STICK_AT, WIPED_AT];
+  const hits = [T.doorsShut + 5, ...NO_AT, ...STICK_AT, ALL_AT, WIPED_AT];
   const sh = hits.reduce((a, h) => {
     const s = shake(f, h, h === WIPED_AT ? 18 : 7);
     return {x: a.x + s.x, y: a.y + s.y};
@@ -105,11 +108,10 @@ const InboxAndChamber: React.FC = () => {
   return (
     <Kraft>
       {/* Inbox */}
-      <div style={{position: 'absolute', left: IN_X, top: IN_Y, width: IN_W}}>
+      <div style={{position: 'absolute', left: IN_X, top: IN_Y, width: IN_W, opacity: 1 - stage, transform: `translateX(${-260 * stage}px)`}}>
         <Paper style={{padding: '30px 22px 26px', height: 110 + ROW_H * 4 + 30}}>
           <div style={{display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '0 12px 18px'}}>
             <span style={{fontFamily: F.display, fontWeight: 700, fontSize: 46, color: C.ink}}>Inbox</span>
-            <span style={{fontFamily: F.body, fontWeight: 600, fontSize: 22, color: C.inkSoft}}>bills@granitepeak · company inbox</span>
           </div>
           <div style={{position: 'relative', height: ROW_H * 4}}>
             {ROWS.map((r, i) => (
@@ -143,27 +145,40 @@ const InboxAndChamber: React.FC = () => {
       </div>
 
       {/* Chamber */}
-      <div style={{position: 'absolute', left: CH_X, top: CH_Y, width: CH_W, height: CH_H, transform: `translate(${sh.x}px, ${sh.y}px)`}}>
+      <div style={{position: 'absolute', left: CH_X, top: CH_Y, width: CH_W, height: CH_H, transform: `translate(${sh.x - 330 * stage}px, ${sh.y - 20 * stage}px) scale(${1 + 0.06 * stage})`, transformOrigin: '50% 0'}}>
         <div style={{position: 'absolute', inset: 0, borderRadius: 30, background: C.felt, overflow: 'hidden', boxShadow: '0 26px 60px rgba(40,25,10,0.45)'}}>
           <div style={{position: 'absolute', inset: 0, backgroundImage: `url(${staticFile('img/felt.webp')})`, backgroundSize: '700px', opacity: 0.9}} />
           {/* hazard tape */}
           <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: 38, background: `repeating-linear-gradient(-45deg, ${C.sun} 0 26px, #1a1a1a 26px 52px)`}} />
           <div style={{position: 'absolute', left: 34, right: 34, top: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
             <span style={{fontFamily: F.display, fontWeight: 700, fontSize: 44, color: C.feltFg}}>The Chamber</span>
-            <VultrPill size={22} />
+            <div style={{transform: `scale(${1 + 0.5 * interpolate(f, [T.vultr, T.vultr + 4, T.vultr + 14], [0, 1, 0], clamp)})`, transformOrigin: '100% 50%'}}>
+              <VultrPill size={30} />
+            </div>
           </div>
           {/* room */}
           <div style={{position: 'absolute', left: ROOM.x, top: ROOM.y, width: ROOM.w, height: ROOM.h, borderRadius: 20, background: 'rgba(0,0,0,0.32)', boxShadow: 'inset 0 6px 24px rgba(0,0,0,0.6)', overflow: 'hidden'}}>
-            {/* stickers inside */}
-            {STICKERS.map((s, i) => (
-              <div key={s} style={{position: 'absolute', left: i % 2 ? 70 : 24, top: 24 + i * 92}}>
-                <Sticker at={STICK_AT[i]} rotate={i % 2 ? 3 : -3} size={27}>
-                  {s}
+            {/* scan line while it watches */}
+            {f >= WATCH_AT && f < WIPED_AT ? (
+              <div style={{position: 'absolute', left: 0, right: 0, top: scan * ROOM.h, height: 6, background: C.sun, boxShadow: `0 0 26px ${C.sun}`, opacity: 0.7}} />
+            ) : null}
+            {/* stickers inside, one per attack Roman names */}
+            <div style={{position: 'absolute', inset: 0, opacity: 1 - wipe, transform: `translateY(${wipe * -60}px) scale(${1 + wipe * 0.1})`}}>
+              {STICKERS.map((t, i) => (
+                <div key={t} style={{position: 'absolute', left: [30, 120, 50][i], top: 40 + i * 140}}>
+                  <Sticker at={STICK_AT[i]} rotate={[-4, 3, -2][i]} size={44}>
+                    {'BLOCKED: ' + t}
+                  </Sticker>
+                </div>
+              ))}
+              <div style={{position: 'absolute', left: 24, top: 452}}>
+                <Sticker at={ALL_AT} rotate={-6} size={60} bg={C.ink} color={C.sun}>
+                  ALL BLOCKED
                 </Sticker>
               </div>
-            ))}
-            <div style={{position: 'absolute', right: 20, bottom: 0}}>
-              <Latch pose="latch2-alarm" at={ALARM_AT} height={190} bob={false} />
+            </div>
+            <div style={{position: 'absolute', right: 10, bottom: 0, opacity: 1 - wipe}}>
+              {f < ALL_AT ? <Latch pose="latch3-inspect" at={WATCH_AT} height={230} bob={false} /> : <Latch pose="latch2-alarm" at={ALL_AT - 9} height={230} bob={false} />}
             </div>
             {/* doors */}
             {(['l', 'r'] as const).map((side) => (
@@ -184,13 +199,22 @@ const InboxAndChamber: React.FC = () => {
               />
             ))}
           </div>
+          {/* "No internet / no passwords / nothing to steal" slapped on the shut doors, on Roman's words */}
+          <div style={{position: 'absolute', left: ROOM.x + 40, top: ROOM.y + 60, opacity: nosOut}}>
+            {NOS.map((t, i) => (
+              <div key={t} style={{marginBottom: 34, marginLeft: i * 60}}>
+                <Sticker at={NO_AT[i]} rotate={[-3, 2, -2][i]} size={50} bg={C.paper} color={C.ink}>
+                  {'✕ ' + t}
+                </Sticker>
+              </div>
+            ))}
+          </div>
           {/* sealed label */}
           <div style={{position: 'absolute', left: 34, top: ROOM.y + ROOM.h + 22, display: 'flex', alignItems: 'center', flexWrap: 'wrap', columnGap: 14, rowGap: 4, width: CH_W - 68, whiteSpace: 'nowrap', opacity: sealed, transform: `scale(${0.8 + 0.2 * sealed})`, transformOrigin: '0 50%'}}>
             <span style={{width: 18, height: 18, borderRadius: '50%', background: C.greenHi, boxShadow: `0 0 14px ${C.greenHi}`}} />
             <span style={{fontFamily: F.body, fontWeight: 700, fontSize: 30, color: C.feltFg}}>
               Sealed · <span style={{color: C.sun}}>throwaway computer on Vultr</span>
             </span>
-            <span style={{fontFamily: F.body, fontWeight: 600, fontSize: 22, color: C.feltMuted, flexBasis: '100%', paddingLeft: 32}}>gVisor sandbox · no internet · no passwords</span>
           </div>
         </div>
         {/* destroyed seal */}

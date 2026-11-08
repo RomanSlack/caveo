@@ -6,18 +6,18 @@ import {ICONS} from '../components/icons';
 
 type Node = {title: string; sub: string; vultr?: boolean; tone?: 'red' | 'green'};
 const NODES: Node[] = [
-  {title: 'Invoice email', sub: 'lands at invoices@caveo.work'},
+  {title: 'Invoice email', sub: ''},
   {title: 'A fresh computer per file', sub: 'Vultr Cloud Compute', vultr: true},
-  {title: 'Sealed throwaway computer', sub: 'gVisor sandbox · no internet · wiped after', tone: 'red'},
-  {title: 'AI reads it', sub: 'Vultr Serverless Inference · qwen3.8-27b, glm-5.3', vultr: true},
-  {title: 'Simple rules decide', sub: "the AI can't change the verdict"},
-  {title: 'A real person', sub: 'approves every payment', tone: 'green'},
+  {title: 'Sealed throwaway computer', sub: '', tone: 'red'},
+  {title: 'AI reads it', sub: 'Vultr Serverless Inference', vultr: true},
+  {title: 'Simple rules decide', sub: ''},
+  {title: 'A real person', sub: '', tone: 'green'},
 ];
 const W = 268;
 const GAP = 34;
 const X0 = (1920 - (NODES.length * W + (NODES.length - 1) * GAP)) / 2;
-const Y = 310;
-const H = 330;
+const Y = 330;
+const H = 290;
 const STEP = 15; // frames between nodes
 
 const Diagram: React.FC = () => {
@@ -59,7 +59,7 @@ const Diagram: React.FC = () => {
                 )}
               </div>
               <div style={{fontFamily: F.display, fontWeight: 700, fontSize: 34, lineHeight: 1.04, color: n.tone === 'red' ? C.redInk : n.tone === 'green' ? C.green : C.ink}}>{n.title}</div>
-              <div style={{fontFamily: F.body, fontWeight: 500, fontSize: 20, lineHeight: 1.3, color: C.inkSoft, marginTop: 12}}>{n.sub}</div>
+              {n.sub ? <div style={{fontFamily: F.body, fontWeight: 700, fontSize: 24, lineHeight: 1.25, color: C.vultr, marginTop: 12}}>{n.sub}</div> : null}
             </Paper>
           </div>
         );
@@ -80,7 +80,7 @@ const Diagram: React.FC = () => {
             <VultrMark size={44} />
             <div>
               <div style={{fontFamily: F.display, fontWeight: 700, fontSize: 38, color: C.ink}}>Keeps the evidence</div>
-              <div style={{fontFamily: F.body, fontWeight: 500, fontSize: 24, color: C.inkSoft}}>Vultr Object Storage · the file, the screenshots, the full log</div>
+              <div style={{fontFamily: F.body, fontWeight: 500, fontSize: 24, color: C.inkSoft}}>Vultr Object Storage</div>
             </div>
           </Paper>
         </div>
@@ -128,7 +128,7 @@ const Score: React.FC = () => {
     <Paper style={{padding: '34px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 40}}>
       <div style={{width: 520}}>
         <div style={{fontFamily: F.display, fontWeight: 700, fontSize: 48, color: C.ink, lineHeight: 1}}>{label}</div>
-        <div style={{fontFamily: F.body, fontWeight: 500, fontSize: 23, color: C.inkSoft, marginTop: 8, whiteSpace: 'nowrap'}}>{sub}</div>
+        {sub ? <div style={{fontFamily: F.body, fontWeight: 500, fontSize: 23, color: C.inkSoft, marginTop: 8, whiteSpace: 'nowrap'}}>{sub}</div> : null}
       </div>
       <Tiles at={at} paid={paid} good={good} />
       <div style={{width: 250, textAlign: 'right', fontFamily: F.display, fontWeight: 700, fontSize: 78, color: good ? C.green : C.redInk, fontVariantNumeric: 'tabular-nums'}}>
@@ -144,8 +144,8 @@ const Score: React.FC = () => {
           <Words text="We hid the note for the AI 11 ways." at={0} stagger={3} />
         </div>
         <div style={{display: 'flex', flexDirection: 'column', gap: 34, marginTop: 70}}>
-          {row('A normal AI', 'same Vultr AI, asked: pay it or hold it?', 14, 1, false)}
-          {row('Caveo', 'sealed computer + AI + rules + a person', 44, 0, true)}
+          {row('A normal AI', '', 14, 1, false)}
+          {row('Caveo', '', 44, 0, true)}
         </div>
       </div>
       <div style={{position: 'absolute', right: 150, bottom: 110}}>

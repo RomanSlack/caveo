@@ -53,20 +53,20 @@ export const LINES = {
   l11: 157, // craft an attack (live)
   l12: 303, // on Vultr: architecture
   l13: 206, // proof: red team score
-  l14: 139, // face full: end card
+  l14: 169, // face full: end card
 };
 
 // Presenter (Roman's webcam) per segment: full size on the left of the graphics, or shrunk into a corner.
 export type Corner = 'bl' | 'br' | 'tl' | 'tr';
-export type Seg = {id: string; kind: 'motion' | 'live'; frames: number; label: string; presenter: 'full' | Corner; clip?: string; from?: number; rate?: number}; // from: clip start (s), rate: playback speed
+export type Seg = {id: string; kind: 'motion' | 'live'; frames: number; label: string; presenter: 'full' | Corner; clip?: string; from?: number; rate?: number; cams?: {t: number; x: number; y: number; w: number}[]}; // from: clip start (s), rate: playback speed
 const L = LINES;
 export const SEGMENTS: Seg[] = [
   {id: 'hook', kind: 'motion', frames: L.l1 + L.l2 + L.l3 + L.l4, label: 'Lines 1-4: problem, numbers, twist, Caveo', presenter: 'full'},
   {id: 'flow', kind: 'motion', frames: L.l5 + L.l6, label: 'Lines 5-6: inbox to Chamber, blocks, wiped', presenter: 'bl'},
-  {id: 'summit', kind: 'live', frames: L.l7, label: 'Line 7: real app, Summit', presenter: 'bl', clip: 'live/app-summit.mp4', from: 10.4, rate: 1},
-  {id: 'brightline', kind: 'live', frames: L.l8 + L.l9, label: 'Lines 8-9: Brightline, Look closer', presenter: 'bl', clip: 'live/app-brightline.mp4', from: 4.5, rate: 1},
-  {id: 'inbox', kind: 'live', frames: L.l10, label: 'Line 10: real inbox', presenter: 'bl', clip: 'live/app-inbox.mp4', from: 1.0, rate: 1.5},
-  {id: 'craft', kind: 'live', frames: L.l11, label: 'Line 11: craft an attack', presenter: 'bl', clip: 'live/app-craft.mp4', from: 3.0, rate: 2.4},
+  {id: 'summit', kind: 'live', frames: L.l7, label: 'Line 7: real app, Summit', presenter: 'bl', clip: 'live/app-summit.mp4', from: 10.4, rate: 1, cams: [{t: 0, x: 0, y: 0, w: 1440}, {t: 1.9, x: 330, y: 120, w: 900}]},
+  {id: 'brightline', kind: 'live', frames: L.l8 + L.l9, label: 'Lines 8-9: Brightline, Look closer', presenter: 'bl', clip: 'live/app-brightline.mp4', from: 4.5, rate: 1, cams: [{t: 0, x: 330, y: 100, w: 900}, {t: 5.6, x: 330, y: 150, w: 900}, {t: 6.4, x: 300, y: 250, w: 860}, {t: 10.4, x: 300, y: 250, w: 860}, {t: 11.2, x: 330, y: 380, w: 860}]},
+  {id: 'inbox', kind: 'live', frames: L.l10, label: 'Line 10: real inbox', presenter: 'bl', clip: 'live/app-inbox.mp4', from: 1.0, rate: 1.5, cams: [{t: 0, x: 0, y: 60, w: 860}, {t: 3.6, x: 0, y: 60, w: 860}, {t: 4.6, x: 330, y: 150, w: 900}]},
+  {id: 'craft', kind: 'live', frames: L.l11, label: 'Line 11: craft an attack', presenter: 'bl', clip: 'live/app-craft.mp4', from: 3.0, rate: 2.4, cams: [{t: 0, x: 170, y: 40, w: 1100}, {t: 1.5, x: 170, y: 40, w: 1100}, {t: 2.3, x: 330, y: 150, w: 900}, {t: 3.9, x: 330, y: 150, w: 900}, {t: 4.5, x: 300, y: 0, w: 860}]},
   {id: 'arch', kind: 'motion', frames: L.l12 + L.l13, label: 'Lines 12-13: on Vultr, proof', presenter: 'bl'},
   {id: 'end', kind: 'motion', frames: L.l14, label: 'Line 14: end card', presenter: 'full'},
 ];
@@ -81,7 +81,8 @@ export const segStart = (id: string) => {
 export const TOTAL_FRAMES = SEGMENTS.reduce((a, s) => a + s.frames, 0); // 3165 = 1:45.5 with the estimates above
 
 // Beats inside scenes (local frames), derived from the line lengths.
-const half = Math.round(L.l2 / 2); // "$3 billion" sentence, then "$123,000 every time" sentence
+// "$3 billion ... last year" holds until Roman says "About" (13.32s in narration = 153 frames into line 2).
+const half = Math.min(153, L.l2 - 30);
 export const HOOK = {
   email: [0, L.l1],
   billions: [L.l1, L.l1 + half],
@@ -93,6 +94,8 @@ export const ARCH = {diagram: [0, L.l12], score: [L.l12, L.l12 + L.l13]} as cons
 
 // face.mp4 is the film's master clock: film frame N = face.mp4 frame N + FACE_OFFSET.
 export const FACE_OFFSET = 0;
+// Frames of end card held after the last word (face.mp4 is padded with a freeze of this length).
+export const END_HOLD = 75;
 
 export const CARDS = [
   {n: 1, title: "It opens the attachment, so you don't."},

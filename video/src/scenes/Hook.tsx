@@ -40,21 +40,7 @@ const Email: React.FC = () => {
             </div>
           </Paper>
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            left: 1080,
-            top: 890,
-            fontFamily: F.body,
-            fontWeight: 600,
-            fontSize: 30,
-            color: C.ink,
-            opacity: real,
-            transform: `translateY(${(1 - real) * 20}px)`,
-          }}
-        >
-          The real Brightline is <span style={{fontFamily: F.mono, fontWeight: 700, color: C.green}}>brightlinelogistics.com</span>
-        </div>
+        {/* (small caption removed: too much text for a fast cut) */}
         <div style={{position: 'absolute', right: 70, top: 120}}>
           <Sticker at={70} rotate={9} size={70}>
             FAKE
