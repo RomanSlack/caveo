@@ -7,3 +7,8 @@ data/uploads/
 research/
 pitch/video/
 pitch/*.mp4
+
+# Remotion video
+video/node_modules/
+video/out/
+video/public/live/

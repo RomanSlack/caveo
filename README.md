@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="app/static/img/latch3-point.webp" alt="Latch, the Caveo mascot, pointing" width="190">
+<img src="docs/img/hero-comic-v1.webp" alt="An evil invoice sneaks in, Latch carries it into the airlock with tongs, and it gets quarantined" width="100%">
 
 # Caveo
 
@@ -174,7 +174,7 @@ caught, per-vendor risk, and a timeline that includes real inbound mail and visi
 ## Run locally
 ```bash
 cp .env.example .env            # add VULTR_INFERENCE_KEY
-pip install -r requirements.txt pymupdf
+pip install -r app/requirements.txt pymupdf
 docker build -t caveo-sandbox:latest sandbox
 python scripts/make_demo.py
 cd app && uvicorn main:app --port 8088

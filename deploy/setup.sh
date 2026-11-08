@@ -16,7 +16,7 @@ fi
 id caveo >/dev/null 2>&1 || useradd --system --create-home --shell /usr/sbin/nologin caveo
 usermod -aG docker caveo
 python3 -m venv /opt/caveo/.venv
-/opt/caveo/.venv/bin/pip install -q -r /opt/caveo/requirements.txt
+/opt/caveo/.venv/bin/pip install -q -r /opt/caveo/app/requirements.txt
 docker build -q -t caveo-sandbox:latest /opt/caveo/sandbox
 
 # pick the runtime: gVisor if Chromium works under it, else runc
